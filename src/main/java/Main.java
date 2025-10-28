@@ -73,7 +73,7 @@ public class Main {
         String [] path_commands = path.split(":");
 
         for (String dir : path_commands) {
-            File file = new File(dir, Detector[1]);
+            File file = new File(dir, Detector[0]);
             if (file.exists() && file.canExecute()) {
                 //Ejecuta el programa
                 ProcessBuilder pb = new ProcessBuilder(Detector);
