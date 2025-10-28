@@ -106,11 +106,12 @@ public class Main {
         }
 
         String path = Detector[1];
-        File dir = new File(path);
 
         if (path.startsWith("~")) {
             path = path.replace("~", System.getenv("HOME"));
         }
+        
+        File dir = new File(path);
 
         if (path.charAt(0)=='/') {
             if (dir.exists() && dir.isDirectory()) {
