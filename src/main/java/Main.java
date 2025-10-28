@@ -110,6 +110,8 @@ public class Main {
         if (path.charAt(0)=='/') {
             if (dir.exists() && dir.isDirectory()) {
                 System.setProperty("user.dir", dir.getAbsolutePath());
+            }else{
+                System.err.println("cd: " + path + ": No such file or directory");
             }
         }else{
             String currentDirString = System.getProperty("user.dir");
