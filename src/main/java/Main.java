@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class Main {
@@ -53,33 +51,73 @@ public class Main {
     public static String echo(String input){
         String echoOutput = input.substring(5);
 
-        // Verificar comillas desbalanceadas - solo las que están fuera de otras comillas
         if (!areQuotesBalanced(echoOutput)) {
             System.err.println("Error: unmatched quote");
             return null;
         }
 
-        List<String> result = new ArrayList<>();
-        // Patrón actualizado: captura comillas dobles, simples, o contenido sin comillas
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"|'([^']*)'|([^\"']+)");
-        Matcher matcher = pattern.matcher(echoOutput);
-
-        while (matcher.find()) {
-            if (matcher.group(1) != null) {
-                // Contenido dentro de comillas dobles: eliminar comillas dobles, mantener comillas simples y espacios
-                result.add(matcher.group(1));
-            } else if (matcher.group(2) != null) {
-                // Contenido dentro de comillas simples: eliminar comillas simples, mantener espacios
-                result.add(matcher.group(2));
-            } else if (matcher.group(3) != null) {
-                // Contenido fuera de comillas: reducir múltiples espacios a uno
-                String withoutQuotes = matcher.group(3);
-                String normalized = withoutQuotes.replaceAll(" {2,}", " ");
-                result.add(normalized);
+        StringBuilder result = new StringBuilder();
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        boolean isEscaped = false;
+        StringBuilder currentSegment = new StringBuilder();
+        
+        for (int i = 0; i < echoOutput.length(); i++) {
+            char c = echoOutput.charAt(i);
+            
+            if (isEscaped && !inSingleQuote) {
+                currentSegment.append(c);
+                isEscaped = false;
+                continue;
+            }
+            
+            if (c == '\\' && !inSingleQuote) {
+                isEscaped = true;
+                continue;
+            }
+            
+            if (c == '\'' && !inDoubleQuote) {
+                if (inSingleQuote) {
+                    result.append(currentSegment);
+                    currentSegment = new StringBuilder();
+                    inSingleQuote = false;
+                } else {
+                    if (currentSegment.length() > 0) {
+                        result.append(normalizeSpaces(currentSegment.toString()));
+                        currentSegment = new StringBuilder();
+                    }
+                    inSingleQuote = true;
+                }
+                continue;
+            }
+            
+            if (c == '"' && !inSingleQuote) {
+                if (inDoubleQuote) {
+                    result.append(currentSegment);
+                    currentSegment = new StringBuilder();
+                    inDoubleQuote = false;
+                } else {
+                    if (currentSegment.length() > 0) {
+                        result.append(normalizeSpaces(currentSegment.toString()));
+                        currentSegment = new StringBuilder();
+                    }
+                    inDoubleQuote = true;
+                }
+                continue;
+            }
+            
+            currentSegment.append(c);
+        }
+        
+        if (currentSegment.length() > 0) {
+            if (inSingleQuote || inDoubleQuote) {
+                result.append(currentSegment);
+            } else {
+                result.append(normalizeSpaces(currentSegment.toString()));
             }
         }
-
-        return String.join("", result);
+        
+        return result.toString();
     }
 
     public static String type(ArrayList<String> commands, String [] Detector){
@@ -112,7 +150,6 @@ public class Main {
         for (String dir : path_commands) {
             File file = new File(dir, Detector[0]);
             if (file.exists() && file.canExecute()) {
-                //Ejecuta el programa
                 ProcessBuilder pb = new ProcessBuilder(Detector);
                 pb.inheritIO();
                 Process process = pb.start();
@@ -172,21 +209,48 @@ public class Main {
 
     public static List<String> parseArguments(String input) {
         List<String> arguments = new ArrayList<>();
-        // Patrón actualizado para manejar comillas dobles y simples
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"|'([^']*)'|([^\\s]+)");
-        Matcher matcher = pattern.matcher(input);
+        StringBuilder currentArg = new StringBuilder();
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        boolean isEscaped = false;
         
-        while (matcher.find()) {
-            if (matcher.group(1) != null) {
-                // Contenido dentro de comillas dobles (sin las comillas)
-                arguments.add(matcher.group(1));
-            } else if (matcher.group(2) != null) {
-                // Contenido dentro de comillas simples (sin las comillas)
-                arguments.add(matcher.group(2));
-            } else if (matcher.group(3) != null) {
-                // Contenido fuera de comillas
-                arguments.add(matcher.group(3));
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            
+            if (isEscaped && !inSingleQuote) {
+                currentArg.append(c);
+                isEscaped = false;
+                continue;
             }
+            
+            if (c == '\\' && !inSingleQuote) {
+                isEscaped = true;
+                continue;
+            }
+            
+            if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                continue;
+            }
+            
+            if (c == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                continue;
+            }
+            
+            if (c == ' ' && !inSingleQuote && !inDoubleQuote) {
+                if (currentArg.length() > 0) {
+                    arguments.add(currentArg.toString());
+                    currentArg = new StringBuilder();
+                }
+                continue;
+            }
+            
+            currentArg.append(c);
+        }
+        
+        if (currentArg.length() > 0) {
+            arguments.add(currentArg.toString());
         }
         
         return arguments;
@@ -197,8 +261,21 @@ public class Main {
         int doubleQuotes = 0;
         boolean inSingle = false;
         boolean inDouble = false;
+        boolean isEscaped = false;
         
-        for (char c : input.toCharArray()) {
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            
+            if (isEscaped && !inSingle) {
+                isEscaped = false;
+                continue;
+            }
+            
+            if (c == '\\' && !inSingle) {
+                isEscaped = true;
+                continue;
+            }
+            
             if (c == '\'' && !inDouble) {
                 inSingle = !inSingle;
                 singleQuotes++;
@@ -209,5 +286,9 @@ public class Main {
         }
         
         return singleQuotes % 2 == 0 && doubleQuotes % 2 == 0;
+    }
+
+    private static String normalizeSpaces(String str) {
+        return str.replaceAll(" {2,}", " ");
     }
 }
