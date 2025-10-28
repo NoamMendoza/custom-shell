@@ -51,8 +51,6 @@ public class Main {
                 System.out.println(dir+"\n"+Detector[1] );
                 if (file.exists() && file.canExecute()) {
                     return Detector[1]+" is "+file.getAbsolutePath();
-                }else{
-                    return Detector[1] + ": not found";
                 }
             }
         }
