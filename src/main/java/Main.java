@@ -101,24 +101,26 @@ public class Main {
 
     public static void cd(String [] Detector){
         if (Detector.length < 2) {
-            System.out.println("cd: missing operand");
+            System.err.println("cd: missing operand");
             return;
         }
-        String path = Detector[1];
-        File dir = new File(path);
-        if (path.charAt(0)=='.' && path.charAt(1)=='/') {
-            String currentDir = System.getProperty("user.dir");
-            dir = new File(currentDir + path.substring(1));
-        }else if (path.charAt(0)=='.' && path.charAt(1)=='.') {
-            String currentDir = System.getProperty("user.dir");
-            File parentDir = new File(currentDir).getParentFile();
-            dir = new File(parentDir.getAbsolutePath() + path.substring(2));
-        }
 
-        if (dir.exists() && dir.isDirectory()) {
-            System.setProperty("user.dir", dir.getAbsolutePath());
-        } else {
-            System.out.println("cd: " + path + ": No such file or directory/s");
+        String path = Detector[1];
+        
+        String currentDirString = System.getProperty("user.dir");
+        File currentDirFile = new File(currentDirString);
+        File newDir = new File(currentDirFile, path);
+
+        try {
+            File canonicalDir = newDir.getCanonicalFile();
+
+            if (canonicalDir.exists() && canonicalDir.isDirectory()) {
+                System.setProperty("user.dir", canonicalDir.getPath());
+            } else {
+                System.err.println("cd: " + path + ": No such file or directory");
+            }
+        } catch (IOException e) {
+            System.err.println("cd: error al resolver la ruta: " + e.getMessage());
         }
     }
 }
