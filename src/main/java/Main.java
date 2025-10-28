@@ -66,21 +66,19 @@ public class Main {
         for (int i = 0; i < echoOutput.length(); i++) {
             char c = echoOutput.charAt(i);
             
-
             if (isEscaped) {
                 if (inSingleQuote) {
-
                     currentSegment.append('\\').append(c);
                 } else if (inDoubleQuote) {
-
-                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == 'n') {
+                    // En comillas dobles, backslash solo escapa: " \ $ `
+                    if (c == '"' || c == '\\' || c == '$' || c == '`') {
                         currentSegment.append(c);
                     } else {
-
+                        // Para otros caracteres, mantener backslash literal
                         currentSegment.append('\\').append(c);
                     }
                 } else {
-
+                    // Fuera de comillas, backslash escapa todo
                     currentSegment.append(c);
                     hasEscapedChars = true;
                 }
@@ -88,13 +86,11 @@ public class Main {
                 continue;
             }
             
-
             if (c == '\\') {
                 isEscaped = true;
                 continue;
             }
             
-
             if (c == '\'' && !inDoubleQuote) {
                 if (inSingleQuote) {
                     result.append(currentSegment);
@@ -116,7 +112,6 @@ public class Main {
                 continue;
             }
             
-
             if (c == '"' && !inSingleQuote) {
                 if (inDoubleQuote) {
                     result.append(currentSegment);
@@ -253,34 +248,30 @@ public class Main {
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
             
-
             if (isEscaped) {
                 if (inSingleQuote) {
-
                     currentArg.append('\\').append(c);
                 } else if (inDoubleQuote) {
-
-                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == 'n') {
+                    // En comillas dobles, backslash solo escapa: " \ $ `
+                    if (c == '"' || c == '\\' || c == '$' || c == '`') {
                         currentArg.append(c);
                     } else {
-
+                        // Para otros caracteres, mantener backslash literal
                         currentArg.append('\\').append(c);
                     }
                 } else {
-
+                    // Fuera de comillas, backslash escapa todo
                     currentArg.append(c);
                 }
                 isEscaped = false;
                 continue;
             }
             
-
             if (c == '\\') {
                 isEscaped = true;
                 continue;
             }
             
-
             if (c == '\'' && !inDoubleQuote) {
                 inSingleQuote = !inSingleQuote;
                 continue;
@@ -291,7 +282,6 @@ public class Main {
                 continue;
             }
             
-
             if (c == ' ' && !inSingleQuote && !inDoubleQuote) {
                 if (currentArg.length() > 0) {
                     arguments.add(currentArg.toString());
