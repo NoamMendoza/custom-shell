@@ -3,9 +3,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,19 +53,9 @@ public class Main {
     public static String echo(String input){
         String echoOutput = input.substring(5);
 
-        // Verificar comillas desbalanceadas primero
-        Map<Character, Integer> conteo = new HashMap<>();
-        for (char c : echoOutput.toCharArray()) {
-            conteo.put(c, conteo.getOrDefault(c, 0) + 1);
-        }
-        
-        if (conteo.get('\'') != null && conteo.get('\'') % 2 != 0) {
-            System.err.println("Error: unmatched single quote");
-            return null;
-        }
-        
-        if (conteo.get('"') != null && conteo.get('"') % 2 != 0) {
-            System.err.println("Error: unmatched double quote");
+        // Verificar comillas desbalanceadas - solo las que están fuera de otras comillas
+        if (!areQuotesBalanced(echoOutput)) {
+            System.err.println("Error: unmatched quote");
             return null;
         }
 
@@ -202,5 +190,24 @@ public class Main {
         }
         
         return arguments;
+    }
+
+    private static boolean areQuotesBalanced(String input) {
+        int singleQuotes = 0;
+        int doubleQuotes = 0;
+        boolean inSingle = false;
+        boolean inDouble = false;
+        
+        for (char c : input.toCharArray()) {
+            if (c == '\'' && !inDouble) {
+                inSingle = !inSingle;
+                singleQuotes++;
+            } else if (c == '"' && !inSingle) {
+                inDouble = !inDouble;
+                doubleQuotes++;
+            }
+        }
+        
+        return singleQuotes % 2 == 0 && doubleQuotes % 2 == 0;
     }
 }
