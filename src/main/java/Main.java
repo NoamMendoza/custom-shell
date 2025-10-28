@@ -55,20 +55,7 @@ public class Main {
     public static String echo(String input){
         String echoOutput = input.substring(5);
 
-        List<String> result = new ArrayList<>();
-        Pattern pattern = Pattern.compile("'([^']*)'|([^']+)");
-        Matcher matcher = pattern.matcher(echoOutput);
-
-        while (matcher.find()) {
-            if (matcher.group(1) != null) {
-                result.add(matcher.group(1));
-            } else if (matcher.group(2) != null) {
-                String withoutQuotes = matcher.group(2);
-                String normalized = withoutQuotes.replaceAll(" {2,}", " ");
-                result.add(normalized);
-            }
-        }
-
+        // Verificar comillas desbalanceadas primero
         Map<Character, Integer> conteo = new HashMap<>();
         for (char c : echoOutput.toCharArray()) {
             conteo.put(c, conteo.getOrDefault(c, 0) + 1);
@@ -77,6 +64,31 @@ public class Main {
         if (conteo.get('\'') != null && conteo.get('\'') % 2 != 0) {
             System.err.println("Error: unmatched single quote");
             return null;
+        }
+        
+        if (conteo.get('"') != null && conteo.get('"') % 2 != 0) {
+            System.err.println("Error: unmatched double quote");
+            return null;
+        }
+
+        List<String> result = new ArrayList<>();
+        // Patrón actualizado: captura comillas dobles, simples, o contenido sin comillas
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"|'([^']*)'|([^\"']+)");
+        Matcher matcher = pattern.matcher(echoOutput);
+
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                // Contenido dentro de comillas dobles: eliminar comillas dobles, mantener comillas simples y espacios
+                result.add(matcher.group(1));
+            } else if (matcher.group(2) != null) {
+                // Contenido dentro de comillas simples: eliminar comillas simples, mantener espacios
+                result.add(matcher.group(2));
+            } else if (matcher.group(3) != null) {
+                // Contenido fuera de comillas: reducir múltiples espacios a uno
+                String withoutQuotes = matcher.group(3);
+                String normalized = withoutQuotes.replaceAll(" {2,}", " ");
+                result.add(normalized);
+            }
         }
 
         return String.join("", result);
@@ -172,16 +184,20 @@ public class Main {
 
     public static List<String> parseArguments(String input) {
         List<String> arguments = new ArrayList<>();
-        Pattern pattern = Pattern.compile("'([^']*)'|([^\\s]+)");
+        // Patrón actualizado para manejar comillas dobles y simples
+        Pattern pattern = Pattern.compile("\"([^\"]*)\"|'([^']*)'|([^\\s]+)");
         Matcher matcher = pattern.matcher(input);
         
         while (matcher.find()) {
             if (matcher.group(1) != null) {
-                // Contenido dentro de comillas (sin las comillas)
+                // Contenido dentro de comillas dobles (sin las comillas)
                 arguments.add(matcher.group(1));
             } else if (matcher.group(2) != null) {
-                // Contenido fuera de comillas
+                // Contenido dentro de comillas simples (sin las comillas)
                 arguments.add(matcher.group(2));
+            } else if (matcher.group(3) != null) {
+                // Contenido fuera de comillas
+                arguments.add(matcher.group(3));
             }
         }
         
