@@ -47,6 +47,7 @@ public class Main {
         }else{
             for (String dir : path_commands) {
                 File file = new File(dir, Detector[1]);
+                System.out.println(dir+"\n"+Detector[1] );
                 if (file.exists() && file.canExecute()) {
                     return Detector[1]+" is "+file.getAbsolutePath();
                 }else{
