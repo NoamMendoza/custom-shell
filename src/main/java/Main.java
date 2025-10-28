@@ -106,6 +106,15 @@ public class Main {
         }
         String path = Detector[1];
         File dir = new File(path);
+        if (path.charAt(0)=='.' && path.charAt(1)=='/') {
+            String currentDir = System.getProperty("user.dir");
+            dir = new File(currentDir + path.substring(1));
+        }else if (path.charAt(0)=='.' && path.charAt(1)=='.') {
+            String currentDir = System.getProperty("user.dir");
+            File parentDir = new File(currentDir).getParentFile();
+            dir = new File(parentDir.getAbsolutePath() + path.substring(2));
+        }
+
         if (dir.exists() && dir.isDirectory()) {
             System.setProperty("user.dir", dir.getAbsolutePath());
         } else {
