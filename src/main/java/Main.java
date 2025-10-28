@@ -108,10 +108,8 @@ public class Main {
         String path = Detector[1];
         File dir = new File(path);
 
-        if (path.equals("~")) {
-            path = System.getProperty("user.home");
-        } else if (path.startsWith("~/")) {
-            path = System.getProperty("user.home") + path.substring(1);
+        if (path.startsWith("~")) {
+            path.replace("~", System.getenv("HOME"));
         }
 
         if (path.charAt(0)=='/') {
