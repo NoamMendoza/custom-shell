@@ -61,12 +61,14 @@ public class Main {
         boolean inDoubleQuote = false;
         boolean isEscaped = false;
         StringBuilder currentSegment = new StringBuilder();
+        boolean hasEscapedChars = false; // Trackear si hay caracteres escapados
         
         for (int i = 0; i < echoOutput.length(); i++) {
             char c = echoOutput.charAt(i);
             
             if (isEscaped && !inSingleQuote) {
                 currentSegment.append(c);
+                hasEscapedChars = true; // Marcar que hay escape
                 isEscaped = false;
                 continue;
             }
@@ -80,11 +82,18 @@ public class Main {
                 if (inSingleQuote) {
                     result.append(currentSegment);
                     currentSegment = new StringBuilder();
+                    hasEscapedChars = false;
                     inSingleQuote = false;
                 } else {
                     if (currentSegment.length() > 0) {
-                        result.append(normalizeSpaces(currentSegment.toString()));
+                        // Solo normalizar si no hay caracteres escapados
+                        if (hasEscapedChars) {
+                            result.append(currentSegment);
+                        } else {
+                            result.append(normalizeSpaces(currentSegment.toString()));
+                        }
                         currentSegment = new StringBuilder();
+                        hasEscapedChars = false;
                     }
                     inSingleQuote = true;
                 }
@@ -95,11 +104,18 @@ public class Main {
                 if (inDoubleQuote) {
                     result.append(currentSegment);
                     currentSegment = new StringBuilder();
+                    hasEscapedChars = false;
                     inDoubleQuote = false;
                 } else {
                     if (currentSegment.length() > 0) {
-                        result.append(normalizeSpaces(currentSegment.toString()));
+                        // Solo normalizar si no hay caracteres escapados
+                        if (hasEscapedChars) {
+                            result.append(currentSegment);
+                        } else {
+                            result.append(normalizeSpaces(currentSegment.toString()));
+                        }
                         currentSegment = new StringBuilder();
+                        hasEscapedChars = false;
                     }
                     inDoubleQuote = true;
                 }
@@ -113,7 +129,12 @@ public class Main {
             if (inSingleQuote || inDoubleQuote) {
                 result.append(currentSegment);
             } else {
-                result.append(normalizeSpaces(currentSegment.toString()));
+                // Solo normalizar si no hay caracteres escapados
+                if (hasEscapedChars) {
+                    result.append(currentSegment);
+                } else {
+                    result.append(normalizeSpaces(currentSegment.toString()));
+                }
             }
         }
         
