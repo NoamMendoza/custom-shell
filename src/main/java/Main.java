@@ -107,6 +107,13 @@ public class Main {
 
         String path = Detector[1];
         File dir = new File(path);
+
+        if (path.equals("~")) {
+            path = System.getProperty("user.home");
+        } else if (path.startsWith("~/")) {
+            path = System.getProperty("user.home") + path.substring(1);
+        }
+
         if (path.charAt(0)=='/') {
             if (dir.exists() && dir.isDirectory()) {
                 System.setProperty("user.dir", dir.getAbsolutePath());
