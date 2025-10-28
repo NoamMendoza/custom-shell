@@ -41,18 +41,21 @@ public class Main {
 
     public static String type(ArrayList<String> commands, String [] Detector){
         String path = System.getenv("PATH");
+        Boolean found = true;
         String [] path_commands = path.split(":");
         if(commands.contains(Detector[1])){
             return Detector[1] + " is a shell builtin";
         }else{
             for (String dir : path_commands) {
                 File file = new File(dir, Detector[1]);
-                try {
-                    if (file.exists() && file.canExecute()) {
-                        return Detector[1]+" is "+file.getAbsolutePath();
-                    }
-                } catch (Exception e) {}
-                
+                if (file.exists() && file.canExecute()) {
+                    return Detector[1]+" is "+file.getAbsolutePath();
+                }else{
+                    found = false;
+                }
+            }
+            if (found==false) {
+                return Detector[1] + ": not found";
             }
         }
         return "";
