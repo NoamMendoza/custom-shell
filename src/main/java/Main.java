@@ -74,7 +74,7 @@ public class Main {
         }
         
         if (conteo.get('\'') != null && conteo.get('\'') % 2 != 0) {
-            System.err.println("Error: unmatched single quote/s");
+            System.err.println("Error: unmatched single quote");
             return null;
         }
 
