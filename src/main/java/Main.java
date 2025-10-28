@@ -109,7 +109,7 @@ public class Main {
         if (dir.exists() && dir.isDirectory()) {
             System.setProperty("user.dir", dir.getAbsolutePath());
         } else {
-            System.out.println("cd: " + path + ": No such file or directory");
+            System.out.println("cd: " + path + ": No such file or directory/s");
         }
     }
 }
