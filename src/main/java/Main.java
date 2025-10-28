@@ -29,6 +29,7 @@ public class Main {
                 System.out.println(System.getProperty("user.dir"));
                 
             }else if (Detector[0].equals("cd")) {
+                System.out.println(System.getProperty("user.dir"));
                 cd(Detector);
                 
             }else{
