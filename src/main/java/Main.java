@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws Exception {
         
-        ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit", "pwd"));
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit", "pwd", "cd"));
         while (true) { 
             System.out.print("$ ");
             
@@ -27,6 +27,9 @@ public class Main {
                 System.out.println(type(commands,  Detector));
             }else if (input.equals("pwd")) {
                 System.out.println(System.getProperty("user.dir"));
+                
+            }else if (Detector[0].equals("cd")) {
+                cd(Detector);
                 
             }else{
                 execute(Detector);
@@ -93,6 +96,20 @@ public class Main {
         }
         if (found==false) {
             System.out.println(Detector[0] + ": command not found");
+        }
+    }
+
+    public static void cd(String [] Detector){
+        if (Detector.length < 2) {
+            System.out.println("cd: missing operand");
+            return;
+        }
+        String path = Detector[1];
+        File dir = new File(path);
+        if (dir.exists() && dir.isDirectory()) {
+            System.setProperty("user.dir", dir.getAbsolutePath());
+        } else {
+            System.out.println("cd: " + path + ": No such file or directory");
         }
     }
 }
