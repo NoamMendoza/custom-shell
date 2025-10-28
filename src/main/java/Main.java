@@ -69,27 +69,27 @@ public class Main {
 
     public static void execute(String [] Detector) throws IOException, InterruptedException{
         String path = System.getenv("PATH");
-        Boolean found = true;
+        Boolean found = false;
         String [] path_commands = path.split(":");
 
         for (String dir : path_commands) {
-                File file = new File(dir, Detector[1]);
-                if (file.exists() && file.canExecute()) {
-                    //Ejecuta el programa
-                    ProcessBuilder pb = new ProcessBuilder(Detector);
-                    pb.inheritIO();
-                    Process process = pb.start();
-                    int exitCode = process.waitFor();
+            File file = new File(dir, Detector[1]);
+            if (file.exists() && file.canExecute()) {
+                //Ejecuta el programa
+                ProcessBuilder pb = new ProcessBuilder(Detector);
+                pb.inheritIO();
+                Process process = pb.start();
+                int exitCode = process.waitFor();
+                found = true;
 
-                    if (exitCode!=0) {
-                        System.err.println("Failed to execute:  "+exitCode);
-                    }
-                }else{
-                    found = false;
+                if (exitCode!=0) {
+                    System.err.println("Failed to execute:  "+exitCode);
+                    break;
                 }
             }
-            if (found==false) {
-                System.out.println(Detector[0] + ": command not found");
-            }
+        }
+        if (found==false) {
+            System.out.println(Detector[0] + ": command not found");
+        }
     }
 }
