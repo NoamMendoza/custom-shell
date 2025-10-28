@@ -1,11 +1,14 @@
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 
 public class Main {
     public static void main(String[] args) throws Exception {
         
-        String [] commands = {"echo", "type", "exit"};
+        //String [] commands = {"echo", "type", "exit"};
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit"));
         while (true) { 
             System.out.print("$ ");
             
@@ -21,13 +24,10 @@ public class Main {
                 System.out.println(echoOutput);
             }
             else if (Detector[0].equals("type")) {
-                for (String command : commands) {
-                    if (Detector[1].equals(command)) {
-                        System.out.println(Detector[1] + " is a shell builtin");
-                        break;
-                    }else{
-                        System.out.println(Detector[1] + ": command not found");
-                    }
+                if(commands.contains(Detector[1])){
+                    System.out.println(Detector[1] + " is a shell builtin");
+                }else{
+                    System.out.println(Detector[1] + ": command not found");
                 }
             }else{
                 System.out.println(input + ": command not found");
