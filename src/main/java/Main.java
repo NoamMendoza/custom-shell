@@ -24,6 +24,7 @@ public class Main {
                 for (String command : commands) {
                     if (Detector[1].equals(command)) {
                         System.out.println(Detector[1] + " is a shell builtin");
+                        break;
                     }else{
                         System.out.println(Detector[1] + ": command not found");
                     }
