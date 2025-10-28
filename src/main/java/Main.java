@@ -29,7 +29,6 @@ public class Main {
                 System.out.println(System.getProperty("user.dir"));
                 
             }else if (Detector[0].equals("cd")) {
-                System.out.println(System.getProperty("user.dir"));
                 cd(Detector);
                 
             }else{
@@ -107,6 +106,13 @@ public class Main {
         }
 
         String path = Detector[1];
+        File dir = new File(path);
+        if (path.charAt(0)=='/') {
+            if (dir.exists() && dir.isDirectory()) {
+                System.setProperty("user.dir", dir.getAbsolutePath());
+            }
+        }
+        
         
         String currentDirString = System.getProperty("user.dir");
         File currentDirFile = new File(currentDirString);
