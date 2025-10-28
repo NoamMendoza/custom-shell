@@ -121,8 +121,9 @@ public class Main {
 
                 if (exitCode!=0) {
                     System.err.println("Failed to execute:  "+exitCode);
-                    break;
+                    
                 }
+                break;
             }
         }
         if (found==false) {
