@@ -61,23 +61,40 @@ public class Main {
         boolean inDoubleQuote = false;
         boolean isEscaped = false;
         StringBuilder currentSegment = new StringBuilder();
-        boolean hasEscapedChars = false; // Trackear si hay caracteres escapados
+        boolean hasEscapedChars = false;
         
         for (int i = 0; i < echoOutput.length(); i++) {
             char c = echoOutput.charAt(i);
             
-            if (isEscaped && !inSingleQuote) {
-                currentSegment.append(c);
-                hasEscapedChars = true; // Marcar que hay escape
+
+            if (isEscaped) {
+                if (inSingleQuote) {
+
+                    currentSegment.append('\\').append(c);
+                } else if (inDoubleQuote) {
+
+                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == 'n') {
+                        currentSegment.append(c);
+                    } else {
+
+                        currentSegment.append('\\').append(c);
+                    }
+                } else {
+
+                    currentSegment.append(c);
+                    hasEscapedChars = true;
+                }
                 isEscaped = false;
                 continue;
             }
             
-            if (c == '\\' && !inSingleQuote) {
+
+            if (c == '\\') {
                 isEscaped = true;
                 continue;
             }
             
+
             if (c == '\'' && !inDoubleQuote) {
                 if (inSingleQuote) {
                     result.append(currentSegment);
@@ -86,7 +103,6 @@ public class Main {
                     inSingleQuote = false;
                 } else {
                     if (currentSegment.length() > 0) {
-                        // Solo normalizar si no hay caracteres escapados
                         if (hasEscapedChars) {
                             result.append(currentSegment);
                         } else {
@@ -100,6 +116,7 @@ public class Main {
                 continue;
             }
             
+
             if (c == '"' && !inSingleQuote) {
                 if (inDoubleQuote) {
                     result.append(currentSegment);
@@ -108,7 +125,6 @@ public class Main {
                     inDoubleQuote = false;
                 } else {
                     if (currentSegment.length() > 0) {
-                        // Solo normalizar si no hay caracteres escapados
                         if (hasEscapedChars) {
                             result.append(currentSegment);
                         } else {
@@ -129,7 +145,6 @@ public class Main {
             if (inSingleQuote || inDoubleQuote) {
                 result.append(currentSegment);
             } else {
-                // Solo normalizar si no hay caracteres escapados
                 if (hasEscapedChars) {
                     result.append(currentSegment);
                 } else {
@@ -238,17 +253,34 @@ public class Main {
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
             
-            if (isEscaped && !inSingleQuote) {
-                currentArg.append(c);
+
+            if (isEscaped) {
+                if (inSingleQuote) {
+
+                    currentArg.append('\\').append(c);
+                } else if (inDoubleQuote) {
+
+                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == 'n') {
+                        currentArg.append(c);
+                    } else {
+
+                        currentArg.append('\\').append(c);
+                    }
+                } else {
+
+                    currentArg.append(c);
+                }
                 isEscaped = false;
                 continue;
             }
             
-            if (c == '\\' && !inSingleQuote) {
+
+            if (c == '\\') {
                 isEscaped = true;
                 continue;
             }
             
+
             if (c == '\'' && !inDoubleQuote) {
                 inSingleQuote = !inSingleQuote;
                 continue;
@@ -259,6 +291,7 @@ public class Main {
                 continue;
             }
             
+
             if (c == ' ' && !inSingleQuote && !inDoubleQuote) {
                 if (currentArg.length() > 0) {
                     arguments.add(currentArg.toString());
