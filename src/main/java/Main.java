@@ -9,7 +9,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws Exception {
         
-        ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit"));
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit", "pwd"));
         while (true) { 
             System.out.print("$ ");
             
@@ -25,6 +25,9 @@ public class Main {
             }
             else if (Detector[0].equals("type")) {
                 System.out.println(type(commands,  Detector));
+            }else if (input.equals("pwd")) {
+                System.out.println(System.getProperty("user.dir"));
+                
             }else{
                 execute(Detector);
             }
