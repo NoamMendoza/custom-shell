@@ -16,7 +16,7 @@ public class Main {
                 System.exit(0);
             }
             if (echoDetector[0].equals("echo")) {
-                String echoOutput = input.substring(4);
+                String echoOutput = input.substring(5);
                 System.out.println(echoOutput);
             }else{
                 System.out.println(input + ": command not found");
