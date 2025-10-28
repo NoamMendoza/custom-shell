@@ -109,7 +109,8 @@ public class Main {
         File dir = new File(path);
 
         if (path.startsWith("~")) {
-            path.replace("~", System.getenv("HOME"));
+            System.out.println(System.getenv("HOME"));
+            //path.replace("~", System.getenv("HOME")+"");
         }
 
         if (path.charAt(0)=='/') {
