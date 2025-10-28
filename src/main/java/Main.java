@@ -3,7 +3,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class Main {
@@ -48,7 +53,32 @@ public class Main {
 
     public static String echo(String input){
         String echoOutput = input.substring(5);
-        return echoOutput;
+
+        List<String> result = new ArrayList<>();
+        Pattern pattern = Pattern.compile("'([^']*)'|([^']+)");
+        Matcher matcher = pattern.matcher(echoOutput);
+
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                result.add(matcher.group(1));
+            } else if (matcher.group(2) != null) {
+                String withoutQuotes = matcher.group(2);
+                String normalized = withoutQuotes.replaceAll(" {2,}", " ");
+                result.add(normalized);
+            }
+        }
+
+        Map<Character, Integer> conteo = new HashMap<>();
+        for (char c : echoOutput.toCharArray()) {
+            conteo.put(c, conteo.getOrDefault(c, 0) + 1);
+        }
+        
+        if (conteo.get('\'') != null && conteo.get('\'') % 2 != 0) {
+            System.err.println("Error: unmatched single quote");
+            return null;
+        }
+
+        return String.join("", result);
     }
 
     public static String type(ArrayList<String> commands, String [] Detector){
