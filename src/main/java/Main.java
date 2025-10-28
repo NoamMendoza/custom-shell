@@ -111,23 +111,25 @@ public class Main {
             if (dir.exists() && dir.isDirectory()) {
                 System.setProperty("user.dir", dir.getAbsolutePath());
             }
-        }
-        
-        
-        String currentDirString = System.getProperty("user.dir");
-        File currentDirFile = new File(currentDirString);
-        File newDir = new File(currentDirFile, path);
+        }else{
+            String currentDirString = System.getProperty("user.dir");
+            File currentDirFile = new File(currentDirString);
+            File newDir = new File(currentDirFile, path);
 
-        try {
-            File canonicalDir = newDir.getCanonicalFile();
+            try {
+                File canonicalDir = newDir.getCanonicalFile();
 
-            if (canonicalDir.exists() && canonicalDir.isDirectory()) {
-                System.setProperty("user.dir", canonicalDir.getPath());
-            } else {
-                System.err.println("cd: " + path + ": No such file or directory");
+                if (canonicalDir.exists() && canonicalDir.isDirectory()) {
+                    System.setProperty("user.dir", canonicalDir.getPath());
+                } else {
+                    System.err.println("cd: " + path + ": No such file or directory");
+                }
+            } catch (IOException e) {
+                System.err.println("cd: error al resolver la ruta: " + e.getMessage());
             }
-        } catch (IOException e) {
-            System.err.println("cd: error al resolver la ruta: " + e.getMessage());
         }
+        
+        
+        
     }
 }
