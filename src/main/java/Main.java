@@ -20,7 +20,8 @@ public class Main {
             
             Scanner scanner = new Scanner(System.in);
             String input = scanner.nextLine();
-            String Detector [] = input.split(" ");
+            List<String> parsedArgs = parseArguments(input);
+            String[] Detector = parsedArgs.toArray(new String[0]);
 
             if (input.equals("exit 0")) {
                 System.exit(0);
@@ -165,9 +166,24 @@ public class Main {
             } catch (IOException e) {
                 System.err.println("cd: error al resolver la ruta: " + e.getMessage());
             }
+        } 
+    }
+
+    public static List<String> parseArguments(String input) {
+        List<String> arguments = new ArrayList<>();
+        Pattern pattern = Pattern.compile("'([^']*)'|([^\\s]+)");
+        Matcher matcher = pattern.matcher(input);
+        
+        while (matcher.find()) {
+            if (matcher.group(1) != null) {
+                // Contenido dentro de comillas (sin las comillas)
+                arguments.add(matcher.group(1));
+            } else if (matcher.group(2) != null) {
+                // Contenido fuera de comillas
+                arguments.add(matcher.group(2));
+            }
         }
         
-        
-        
+        return arguments;
     }
 }
