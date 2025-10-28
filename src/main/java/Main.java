@@ -1,5 +1,6 @@
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -25,8 +26,13 @@ public class Main {
             else if (Detector[0].equals("type")) {
                 System.out.println(type(commands,  Detector));
             }else{
-                System.out.println(input + ": command not found");
+                execute(Detector);
             }
+            
+            /*else{
+                System.out.println(input + ": command not found");
+            } */
+            
             
 
            
@@ -59,5 +65,31 @@ public class Main {
             }
         }
         return "";
+    }
+
+    public static void execute(String [] Detector) throws IOException, InterruptedException{
+        String path = System.getenv("PATH");
+        Boolean found = true;
+        String [] path_commands = path.split(":");
+
+        for (String dir : path_commands) {
+                File file = new File(dir, Detector[1]);
+                if (file.exists() && file.canExecute()) {
+                    //Ejecuta el programa
+                    ProcessBuilder pb = new ProcessBuilder(Detector);
+                    pb.inheritIO();
+                    Process process = pb.start();
+                    int exitCode = process.waitFor();
+
+                    if (exitCode!=0) {
+                        System.err.println("Failed to execute:  "+exitCode);
+                    }
+                }else{
+                    found = false;
+                }
+            }
+            if (found==false) {
+                System.out.println(Detector[0] + ": command not found");
+            }
     }
 }
