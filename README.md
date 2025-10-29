@@ -1,35 +1,43 @@
 [![progress-banner](https://backend.codecrafters.io/progress/shell/6e185ba8-ad66-444d-95f5-be8f97bccf37)](https://app.codecrafters.io/users/NoamMendoza?r=2qF)
 
-This is a starting point for Java solutions to the
-["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview).
+This program consist in a custom shell made with Java with the purpose to learn and understand the basic operation at SO level.
 
-In this challenge, you'll build your own POSIX compliant shell that's capable of
-interpreting shell commands, running external programs and builtin commands like
-cd, pwd, echo and more. Along the way, you'll learn about shell command parsing,
-REPLs, builtin commands, and more.
+This shell counts with the buildtin commands (for the moment):
+1. echo
+2. type
+3. exit
+4. pwd
+5. cd
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
-
-# Passing the first stage
-
-The entry point for your `shell` implementation is in `src/main/java/Main.java`.
-Study and uncomment the relevant code, and push your changes to pass the first
-stage:
-
+**echo**: This command is used to print a given chain of characters. Supports Simple and double quotes('' and ""), escape characters (using \ to take the literal value of the character)
 ```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
 ```
 
-Time to move on to the next stage!
+**type**: This command is given a name of a program, detects if it's a buildtin program, if not, search if it's located in te PATH directories and print the absolute route of the program.
+```sh
+```
 
-# Stage 2 & beyond
+**exit**: Simply close the shell.
+```sh
+```
 
-Note: This section is for stages 2 and beyond.
+**pwd**: Obtains the actual absolute route of the working directory.
+```sh
+```
 
-1. Ensure you have `mvn` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main/java/Main.java`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+**cd**: Can change the working directory. Supports absolute and relative routes(Also can detect the ~ character as the HOME directory located in PATH).
+```sh
+```
+
+# For the future
+
+Implement as buildtin commands:
+ -ls
+ -cat
+ -fetch
+
+Features to implement
+ -Autocompletion
+ -Pipelines
+ -History
+ -History persistance
