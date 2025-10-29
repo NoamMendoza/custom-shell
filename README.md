@@ -9,35 +9,61 @@ This shell counts with the buildtin commands (for the moment):
 4. pwd
 5. cd
 
-**echo**: This command is used to print a given chain of characters. Supports Simple and double quotes('' and ""), escape characters (using \ to take the literal value of the character)
+**echo**: This command is used to print a given chain of characters. Supports Simple and double quotes('' and ""), escape characters (using \ to take the literal value of the character).
 ```sh
+echo hello world
+hello world
+
+echo hello      world
+hello world
+
+echo "Hello       world"
+Hello       world
+
+echo "Hello 'beautiful' world"
+Hello 'beautiful' world
+
+echo 'Hello "beautiful" World'
+Hello "beautiful" World
 ```
 
 **type**: This command is given a name of a program, detects if it's a buildtin program, if not, search if it's located in te PATH directories and print the absolute route of the program.
 ```sh
+type echo
+echo is a buildtin program
+
+type cat
+cat is in (Path to the program)
 ```
 
 **exit**: Simply close the shell.
 ```sh
+exit 0
 ```
 
 **pwd**: Obtains the actual absolute route of the working directory.
 ```sh
+pwd
+/home/user
 ```
 
 **cd**: Can change the working directory. Supports absolute and relative routes(Also can detect the ~ character as the HOME directory located in PATH).
 ```sh
+cd /home/user
+cd ~
+cd ../../
+cd ./Downloads
 ```
 
 # For the future
 
 Implement as buildtin commands:
- -ls
- -cat
- -fetch
+ - ls
+ - cat
+ - fetch
 
-Features to implement
- -Autocompletion
- -Pipelines
- -History
- -History persistance
+Features to implement:
+ - Autocompletion
+ - Pipelines
+ - History
+ - History persistance
