@@ -1,5 +1,7 @@
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +52,68 @@ public class Main {
 
     public static String echo(String input){
         String echoOutput = input.substring(5);
+        
+        // Buscar operador de redirección > o 1>
+        String redirectFile = null;
+        int redirectIndex = -1;
+        
+        // Buscar > fuera de comillas
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        boolean isEscaped = false;
+        
+        for (int i = 0; i < echoOutput.length(); i++) {
+            char c = echoOutput.charAt(i);
+            
+            if (isEscaped) {
+                isEscaped = false;
+                continue;
+            }
+            
+            if (c == '\\') {
+                isEscaped = true;
+                continue;
+            }
+            
+            if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+                continue;
+            }
+            
+            if (c == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+                continue;
+            }
+            
+            // Buscar > fuera de comillas
+            if (!inSingleQuote && !inDoubleQuote && c == '>') {
+                // Verificar si hay un 1 antes del >
+                int checkIndex = i - 1;
+                while (checkIndex >= 0 && Character.isWhitespace(echoOutput.charAt(checkIndex))) {
+                    checkIndex--;
+                }
+                
+                if (checkIndex >= 0 && echoOutput.charAt(checkIndex) == '1') {
+                    redirectIndex = checkIndex;
+                } else {
+                    redirectIndex = i;
+                }
+                
+                // Obtener el nombre del archivo (después del >)
+                int fileStart = i + 1;
+                while (fileStart < echoOutput.length() && Character.isWhitespace(echoOutput.charAt(fileStart))) {
+                    fileStart++;
+                }
+                
+                if (fileStart < echoOutput.length()) {
+                    redirectFile = echoOutput.substring(fileStart).trim();
+                }
+                
+                // Ajustar echoOutput para procesar solo la parte antes del operador
+                echoOutput = echoOutput.substring(0, redirectIndex).trim();
+                break;
+            }
+        }
 
         if (!areQuotesBalanced(echoOutput)) {
             System.err.println("Error: unmatched quote");
@@ -57,9 +121,9 @@ public class Main {
         }
 
         StringBuilder result = new StringBuilder();
-        boolean inSingleQuote = false;
-        boolean inDoubleQuote = false;
-        boolean isEscaped = false;
+        inSingleQuote = false;
+        inDoubleQuote = false;
+        isEscaped = false;
         StringBuilder currentSegment = new StringBuilder();
         boolean hasEscapedChars = false;
         
@@ -148,7 +212,20 @@ public class Main {
             }
         }
         
-        return result.toString();
+        String output = result.toString();
+        
+        // Si hay redirección, escribir al archivo
+        if (redirectFile != null && !redirectFile.isEmpty()) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(redirectFile))) {
+                writer.write(output);
+                return null; // No retornar nada cuando se redirige a archivo
+            } catch (IOException e) {
+                System.err.println("Error: cannot write to file: " + redirectFile);
+                return null;
+            }
+        }
+        
+        return output;
     }
 
     public static String type(ArrayList<String> commands, String [] Detector){
