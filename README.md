@@ -9,7 +9,7 @@ This shell counts with the buildtin commands (for the moment):
 4. pwd
 5. cd
 
-**echo**: This command is used to print a given chain of characters. Supports Simple and double quotes('' and ""), escape characters (using \ to take the literal value of the character).
+**echo**: This command is used to print a given chain of characters. Supports Simple and double quotes('' and ""), escape characters (using \ to take the literal value of the character), redirection of stdout and stderr (1>, >, >>, 2>> operators).
 ```sh
 echo hello world
 hello world
@@ -36,7 +36,7 @@ type cat
 cat is in (Path to the program)
 ```
 
-**exit**: Simply close the shell.
+**exit 0**: Simply close the shell.
 ```sh
 exit 0
 ```
