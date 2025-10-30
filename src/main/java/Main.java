@@ -388,7 +388,7 @@ public class Main {
                         while ((errorLine = errorReader.readLine()) != null) {
                             System.err.println(errorLine);
                         }
-                        System.err.println("Failed to execute:  " + exitCode);
+                        //System.err.println("Failed to execute:  " + exitCode);
                         return null;
                     }
                     
