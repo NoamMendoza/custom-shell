@@ -336,7 +336,7 @@ public class Main {
                 found = true;
 
                 if (exitCode!=0) {
-                    System.err.println("Failed to execute:  "+exitCode);
+                    //System.err.println("Failed to execute:  "+exitCode);
                 }
                 break;
             }
