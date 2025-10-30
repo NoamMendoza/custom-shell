@@ -47,12 +47,11 @@ public class Main {
             else if (Detector[0].equals("type")) {
                 output = type(commands, Detector);
             }
-            else if (input.equals("pwd")) {
+            else if (commandInput.equals("pwd")) {  // CORREGIDO: usar commandInput
                 output = System.getProperty("user.dir");
             }
             else if (Detector[0].equals("cd")) {
                 cd(Detector);
-                // cd no produce salida, continuar
                 continue;
             }
             else {
@@ -60,12 +59,12 @@ public class Main {
             }
             
             // Manejar la salida (imprimir o redirigir a archivo)
-            if (output != null) {
-                if (redirectInfo.hasRedirection) {
-                    writeToFile(redirectInfo.file, output);
-                } else {
-                    System.out.println(output);
-                }
+            if (redirectInfo.hasRedirection) {
+                // Siempre escribir al archivo cuando hay redirección
+                writeToFile(redirectInfo.file, output == null ? "" : output);
+            } else if (output != null) {
+                // Solo imprimir si hay salida y no hay redirección
+                System.out.println(output);
             }
         }
     }
@@ -155,14 +154,17 @@ public class Main {
      * Escribe el contenido dado a un archivo.
      * 
      * @param filename Nombre del archivo de destino
-     * @param content Contenido a escribir
+     * @param content Contenido a escribir (puede ser vacío o null)
      */
     private static void writeToFile(String filename, String content) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
-            writer.write(content);
-            if (!content.isEmpty() && !content.endsWith("\n")) {
-                writer.write("\n");
+            if (content != null && !content.isEmpty()) {
+                writer.write(content);
+                if (!content.endsWith("\n")) {
+                    writer.write("\n");
+                }
             }
+            // Si content es null o vacío, el archivo se crea vacío o solo con salto de línea
         } catch (IOException e) {
             System.err.println("Error: cannot write to file: " + filename);
         }
@@ -348,6 +350,7 @@ public class Main {
 
     /**
      * Ejecuta un comando externo y captura su salida estándar.
+     * Los errores se muestran en stderr pero no se capturan.
      * Usado cuando se necesita capturar la salida para redirección.
      * 
      * @param Detector Array con el comando y sus argumentos
@@ -363,33 +366,54 @@ public class Main {
             if (file.exists() && file.canExecute()) {
                 try {
                     ProcessBuilder pb = new ProcessBuilder(Detector);
-                    pb.redirectErrorStream(false);
                     Process process = pb.start();
                     
-                    // Leer la salida estándar
-                    BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream())
-                    );
+                    // Leer stdout y stderr en hilos separados para evitar deadlock
                     StringBuilder output = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        output.append(line).append("\n");
-                    }
+                    StringBuilder errors = new StringBuilder();
+                    
+                    // Hilo para leer stdout
+                    Thread outputThread = new Thread(() -> {
+                        try (BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(process.getInputStream()))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                output.append(line).append("\n");
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    
+                    // Hilo para leer stderr
+                    Thread errorThread = new Thread(() -> {
+                        try (BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(process.getErrorStream()))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                errors.append(line).append("\n");
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    
+                    outputThread.start();
+                    errorThread.start();
                     
                     int exitCode = process.waitFor();
+                    outputThread.join();
+                    errorThread.join();
+                    
                     found = true;
 
-                    if (exitCode != 0) {
-                        // Leer errores
-                        BufferedReader errorReader = new BufferedReader(
-                            new InputStreamReader(process.getErrorStream())
-                        );
-                        String errorLine;
-                        while ((errorLine = errorReader.readLine()) != null) {
-                            System.err.println(errorLine);
+                    // Mostrar errores si los hay
+                    if (errors.length() > 0) {
+                        String errorOutput = errors.toString();
+                        if (errorOutput.endsWith("\n")) {
+                            errorOutput = errorOutput.substring(0, errorOutput.length() - 1);
                         }
-                        //System.err.println("Failed to execute:  " + exitCode)s;
-                        return null;
+                        System.err.println(errorOutput);
                     }
                     
                     // Remover el último salto de línea si existe
