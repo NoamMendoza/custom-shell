@@ -12,7 +12,7 @@ import java.util.Scanner;
 /**
  * Implementación de un intérprete de comandos simple tipo shell.
  * Soporta comandos integrados (echo, type, exit, pwd, cd) y comandos externos del sistema.
- * También maneja redirección de salida con los operadores >, 1> y 2>.
+ * También maneja redirección de salida con los operadores >, 1>, 2>, >> y 2>>.
  */
 public class Main {
     /**
@@ -64,14 +64,14 @@ public class Main {
             
             // Manejar la salida estándar (stdout)
             if (redirectInfo.hasStdoutRedirection) {
-                writeToFile(redirectInfo.stdoutFile, output == null ? "" : output);
+                writeToFile(redirectInfo.stdoutFile, output == null ? "" : output, redirectInfo.stdoutAppend);
             } else if (output != null && !output.isEmpty()) {
                 System.out.println(output);
             }
             
             // Manejar la salida de error (stderr)
             if (redirectInfo.hasStderrRedirection) {
-                writeToFile(redirectInfo.stderrFile, errorOutput == null ? "" : errorOutput);
+                writeToFile(redirectInfo.stderrFile, errorOutput == null ? "" : errorOutput, redirectInfo.stderrAppend);
             } else if (errorOutput != null && !errorOutput.isEmpty()) {
                 System.err.println(errorOutput);
             }
@@ -96,23 +96,28 @@ public class Main {
      */
     private static class RedirectionInfo {
         String command;                 // Comando sin los operadores de redirección
-        String stdoutFile;              // Archivo de destino para stdout (> o 1>)
-        String stderrFile;              // Archivo de destino para stderr (2>)
+        String stdoutFile;              // Archivo de destino para stdout (> o 1> o >>)
+        String stderrFile;              // Archivo de destino para stderr (2> o 2>>)
         boolean hasStdoutRedirection;   // Indica si hay redirección de stdout
         boolean hasStderrRedirection;   // Indica si hay redirección de stderr
+        boolean stdoutAppend;           // true si es >>, false si es >
+        boolean stderrAppend;           // true si es 2>>, false si es 2>
         
         RedirectionInfo(String command, String stdoutFile, String stderrFile, 
-                       boolean hasStdoutRedirection, boolean hasStderrRedirection) {
+                       boolean hasStdoutRedirection, boolean hasStderrRedirection,
+                       boolean stdoutAppend, boolean stderrAppend) {
             this.command = command;
             this.stdoutFile = stdoutFile;
             this.stderrFile = stderrFile;
             this.hasStdoutRedirection = hasStdoutRedirection;
             this.hasStderrRedirection = hasStderrRedirection;
+            this.stdoutAppend = stdoutAppend;
+            this.stderrAppend = stderrAppend;
         }
     }
 
     /**
-     * Parsea el comando de entrada para detectar operadores de redirección (>, 1> y 2>).
+     * Parsea el comando de entrada para detectar operadores de redirección (>, 1>, 2>, >>, 2>>).
      * Soporta múltiples redirecciones en el mismo comando.
      * 
      * @param input Línea de comando completa
@@ -127,6 +132,8 @@ public class Main {
         String stderrFile = null;
         boolean hasStdoutRedirection = false;
         boolean hasStderrRedirection = false;
+        boolean stdoutAppend = false;
+        boolean stderrAppend = false;
         
         List<RedirectionToken> redirections = new ArrayList<>();
         
@@ -156,6 +163,13 @@ public class Main {
             
             // Buscar > fuera de comillas
             if (!inSingleQuote && !inDoubleQuote && c == '>') {
+                // Verificar si es >> (append mode)
+                boolean isAppend = false;
+                int nextIndex = i + 1;
+                if (nextIndex < input.length() && input.charAt(nextIndex) == '>') {
+                    isAppend = true;
+                }
+                
                 // Verificar si hay un número antes del >
                 int redirectStart = i;
                 int checkIndex = i - 1;
@@ -170,7 +184,7 @@ public class Main {
                 }
                 
                 // Obtener el nombre del archivo
-                int fileStart = i + 1;
+                int fileStart = isAppend ? i + 2 : i + 1;
                 while (fileStart < input.length() && Character.isWhitespace(input.charAt(fileStart))) {
                     fileStart++;
                 }
@@ -210,13 +224,18 @@ public class Main {
                     file = file.substring(1, file.length() - 1);
                 }
                 
-                redirections.add(new RedirectionToken(redirectStart, fileEnd, fdNumber, file));
+                redirections.add(new RedirectionToken(redirectStart, fileEnd, fdNumber, file, isAppend));
+                
+                // Saltar el segundo '>' si es append
+                if (isAppend) {
+                    i++;
+                }
             }
         }
         
         // Si no hay redirecciones, retornar el input original
         if (redirections.isEmpty()) {
-            return new RedirectionInfo(input, null, null, false, false);
+            return new RedirectionInfo(input, null, null, false, false, false, false);
         }
         
         // Ordenar las redirecciones por posición
@@ -234,9 +253,11 @@ public class Main {
             if (redir.fd == 1) {
                 stdoutFile = redir.file;
                 hasStdoutRedirection = true;
+                stdoutAppend = redir.append;
             } else if (redir.fd == 2) {
                 stderrFile = redir.file;
                 hasStderrRedirection = true;
+                stderrAppend = redir.append;
             }
         }
         
@@ -244,7 +265,8 @@ public class Main {
         String command = commandBuilder.toString().trim();
         
         return new RedirectionInfo(command, stdoutFile, stderrFile, 
-                                   hasStdoutRedirection, hasStderrRedirection);
+                                   hasStdoutRedirection, hasStderrRedirection,
+                                   stdoutAppend, stderrAppend);
     }
 
     /**
@@ -255,12 +277,14 @@ public class Main {
         int end;        // Posición final del nombre de archivo
         int fd;         // Descriptor de archivo (1 = stdout, 2 = stderr)
         String file;    // Nombre del archivo
+        boolean append; // true si es >>, false si es >
         
-        RedirectionToken(int start, int end, int fd, String file) {
+        RedirectionToken(int start, int end, int fd, String file, boolean append) {
             this.start = start;
             this.end = end;
             this.fd = fd;
             this.file = file;
+            this.append = append;
         }
     }
 
@@ -269,16 +293,17 @@ public class Main {
      * 
      * @param filename Nombre del archivo de destino
      * @param content Contenido a escribir (puede ser vacío o null)
+     * @param append Si true, añade al final del archivo; si false, sobrescribe
      */
-    private static void writeToFile(String filename, String content) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+    private static void writeToFile(String filename, String content, boolean append) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, append))) {
             if (content != null && !content.isEmpty()) {
                 writer.write(content);
                 if (!content.endsWith("\n")) {
                     writer.write("\n");
                 }
             }
-            // Si content es null o vacío, el archivo se crea vacío
+            // Si content es null o vacío, el archivo se crea vacío (o no se modifica en modo append)
         } catch (IOException e) {
             System.err.println("Error: cannot write to file: " + filename);
         }
