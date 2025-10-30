@@ -65,7 +65,7 @@ public class Main {
             // Manejar la salida estándar (stdout)
             if (redirectInfo.hasStdoutRedirection) {
                 writeToFile(redirectInfo.stdoutFile, output == null ? "" : output);
-            } else if (output != null) {
+            } else if (output != null && !output.isEmpty()) {
                 System.out.println(output);
             }
             
@@ -73,7 +73,7 @@ public class Main {
             if (redirectInfo.hasStderrRedirection) {
                 writeToFile(redirectInfo.stderrFile, errorOutput == null ? "" : errorOutput);
             } else if (errorOutput != null && !errorOutput.isEmpty()) {
-                System.err.print(errorOutput);
+                System.err.println(errorOutput);
             }
         }
     }
@@ -525,11 +525,19 @@ public class Main {
                     if (stdoutResult.endsWith("\n")) {
                         stdoutResult = stdoutResult.substring(0, stdoutResult.length() - 1);
                     }
+                    // Si stdout está vacío, retornar null en lugar de string vacío
+                    if (stdoutResult.isEmpty()) {
+                        stdoutResult = null;
+                    }
                     
                     // Procesar stderr
                     String stderrResult = errors.toString();
                     if (stderrResult.endsWith("\n")) {
                         stderrResult = stderrResult.substring(0, stderrResult.length() - 1);
+                    }
+                    // Si stderr está vacío, retornar null en lugar de string vacío
+                    if (stderrResult.isEmpty()) {
+                        stderrResult = null;
                     }
                     
                     return new CommandOutput(stdoutResult, stderrResult);
@@ -541,6 +549,7 @@ public class Main {
         }
         
         if (found==false) {
+            // Retornar el error como stderr, no como stdout
             return new CommandOutput(null, Detector[0] + ": command not found");
         }
         return new CommandOutput(null, null);
