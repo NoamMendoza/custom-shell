@@ -63,7 +63,7 @@ Implement as buildtin commands:
  - fetch
 
 Features to implement:
- - Autocompletion
+ - Autocompletion (In progress)
  - Pipelines
  - History
  - History persistance

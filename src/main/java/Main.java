@@ -7,12 +7,21 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.Completer;
+import org.jline.reader.impl.completer.StringsCompleter;
+import org.jline.reader.impl.completer.AggregateCompleter;
+import org.jline.reader.impl.completer.ArgumentCompleter;
+import org.jline.reader.impl.completer.NullCompleter;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
  * Implementación de un intérprete de comandos simple tipo shell.
  * Soporta comandos integrados (echo, type, exit, pwd, cd) y comandos externos del sistema.
  * También maneja redirección de salida con los operadores >, 1>, 2>, >> y 2>>.
+ * Incluye autocompletado con Tab para comandos builtin.
  */
 public class Main {
     /**
@@ -22,17 +31,49 @@ public class Main {
     public static void main(String[] args) throws Exception {
         
         ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit", "pwd", "cd"));
-        while (true) { 
-            System.out.print("$ ");
+        
+        // Configurar terminal y line reader con autocompletado
+        Terminal terminal = TerminalBuilder.builder()
+                .system(true)
+                .build();
+        
+        // Crear completers para cada comando
+        List<Completer> completers = new ArrayList<>();
+        for (String cmd : commands) {
+            completers.add(new ArgumentCompleter(
+                new StringsCompleter(cmd),
+                NullCompleter.INSTANCE
+            ));
+        }
+        
+        // Agregar completer agregado
+        Completer completer = new AggregateCompleter(completers);
+        
+        LineReader reader = LineReaderBuilder.builder()
+                .terminal(terminal)
+                .completer(completer)
+                .build();
+        
+        while (true) {
+            String input;
+            try {
+                input = reader.readLine("$ ");
+            } catch (Exception e) {
+                break; // EOF o error
+            }
             
-            Scanner scanner = new Scanner(System.in);
-            String input = scanner.nextLine();
+            if (input == null || input.trim().isEmpty()) {
+                continue;
+            }
             
             // Buscar y manejar redirección de salida antes de procesar el comando
             RedirectionInfo redirectInfo = parseRedirection(input);
             String commandInput = redirectInfo.command;
             
             List<String> parsedArgs = parseArguments(commandInput);
+            if (parsedArgs.isEmpty()) {
+                continue;
+            }
             String[] Detector = parsedArgs.toArray(new String[0]);
 
             // Capturar la salida si hay redirección
@@ -76,6 +117,8 @@ public class Main {
                 System.err.println(errorOutput);
             }
         }
+        
+        terminal.close();
     }
 
     /**
