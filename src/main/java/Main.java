@@ -12,7 +12,7 @@ import java.util.Scanner;
 /**
  * Implementación de un intérprete de comandos simple tipo shell.
  * Soporta comandos integrados (echo, type, exit, pwd, cd) y comandos externos del sistema.
- * También maneja redirección de salida con los operadores > y 1>.
+ * También maneja redirección de salida con los operadores >, 1> y 2>.
  */
 public class Main {
     /**
@@ -37,6 +37,7 @@ public class Main {
 
             // Capturar la salida si hay redirección
             String output = null;
+            String errorOutput = null;
             
             if (input.equals("exit 0")) {
                 System.exit(0);
@@ -47,7 +48,7 @@ public class Main {
             else if (Detector[0].equals("type")) {
                 output = type(commands, Detector);
             }
-            else if (commandInput.equals("pwd")) {  // CORREGIDO: usar commandInput
+            else if (commandInput.equals("pwd")) {
                 output = System.getProperty("user.dir");
             }
             else if (Detector[0].equals("cd")) {
@@ -55,17 +56,38 @@ public class Main {
                 continue;
             }
             else {
-                output = executeAndCapture(Detector);
+                // Para comandos externos, necesitamos capturar ambos stdout y stderr
+                CommandOutput cmdOutput = executeAndCapture(Detector);
+                output = cmdOutput.stdout;
+                errorOutput = cmdOutput.stderr;
             }
             
-            // Manejar la salida (imprimir o redirigir a archivo)
-            if (redirectInfo.hasRedirection) {
-                // Siempre escribir al archivo cuando hay redirección
-                writeToFile(redirectInfo.file, output == null ? "" : output);
+            // Manejar la salida estándar (stdout)
+            if (redirectInfo.hasStdoutRedirection) {
+                writeToFile(redirectInfo.stdoutFile, output == null ? "" : output);
             } else if (output != null) {
-                // Solo imprimir si hay salida y no hay redirección
                 System.out.println(output);
             }
+            
+            // Manejar la salida de error (stderr)
+            if (redirectInfo.hasStderrRedirection) {
+                writeToFile(redirectInfo.stderrFile, errorOutput == null ? "" : errorOutput);
+            } else if (errorOutput != null && !errorOutput.isEmpty()) {
+                System.err.print(errorOutput);
+            }
+        }
+    }
+
+    /**
+     * Clase para almacenar la salida de un comando (stdout y stderr).
+     */
+    private static class CommandOutput {
+        String stdout;
+        String stderr;
+        
+        CommandOutput(String stdout, String stderr) {
+            this.stdout = stdout;
+            this.stderr = stderr;
         }
     }
 
@@ -73,19 +95,25 @@ public class Main {
      * Clase interna para almacenar información sobre redirección de salida.
      */
     private static class RedirectionInfo {
-        String command;           // Comando sin el operador de redirección
-        String file;              // Archivo de destino para la redirección
-        boolean hasRedirection;   // Indica si hay redirección
+        String command;                 // Comando sin los operadores de redirección
+        String stdoutFile;              // Archivo de destino para stdout (> o 1>)
+        String stderrFile;              // Archivo de destino para stderr (2>)
+        boolean hasStdoutRedirection;   // Indica si hay redirección de stdout
+        boolean hasStderrRedirection;   // Indica si hay redirección de stderr
         
-        RedirectionInfo(String command, String file, boolean hasRedirection) {
+        RedirectionInfo(String command, String stdoutFile, String stderrFile, 
+                       boolean hasStdoutRedirection, boolean hasStderrRedirection) {
             this.command = command;
-            this.file = file;
-            this.hasRedirection = hasRedirection;
+            this.stdoutFile = stdoutFile;
+            this.stderrFile = stderrFile;
+            this.hasStdoutRedirection = hasStdoutRedirection;
+            this.hasStderrRedirection = hasStderrRedirection;
         }
     }
 
     /**
-     * Parsea el comando de entrada para detectar operadores de redirección (> o 1>).
+     * Parsea el comando de entrada para detectar operadores de redirección (>, 1> y 2>).
+     * Soporta múltiples redirecciones en el mismo comando.
      * 
      * @param input Línea de comando completa
      * @return Objeto RedirectionInfo con el comando y la información de redirección
@@ -95,6 +123,14 @@ public class Main {
         boolean inDoubleQuote = false;
         boolean isEscaped = false;
         
+        String stdoutFile = null;
+        String stderrFile = null;
+        boolean hasStdoutRedirection = false;
+        boolean hasStderrRedirection = false;
+        
+        List<RedirectionToken> redirections = new ArrayList<>();
+        
+        // Primera pasada: encontrar todos los operadores de redirección
         for (int i = 0; i < input.length(); i++) {
             char c = input.charAt(i);
             
@@ -120,19 +156,18 @@ public class Main {
             
             // Buscar > fuera de comillas
             if (!inSingleQuote && !inDoubleQuote && c == '>') {
-                // Verificar si hay un 1 antes del >
+                // Verificar si hay un número antes del >
                 int redirectStart = i;
                 int checkIndex = i - 1;
                 while (checkIndex >= 0 && Character.isWhitespace(input.charAt(checkIndex))) {
                     checkIndex--;
                 }
                 
-                if (checkIndex >= 0 && input.charAt(checkIndex) == '1') {
+                int fdNumber = 1; // Por defecto stdout
+                if (checkIndex >= 0 && Character.isDigit(input.charAt(checkIndex))) {
+                    fdNumber = input.charAt(checkIndex) - '0';
                     redirectStart = checkIndex;
                 }
-                
-                // Obtener el comando sin la redirección
-                String command = input.substring(0, redirectStart).trim();
                 
                 // Obtener el nombre del archivo
                 int fileStart = i + 1;
@@ -140,14 +175,93 @@ public class Main {
                     fileStart++;
                 }
                 
-                String file = input.substring(fileStart).trim();
+                // Encontrar el final del nombre de archivo
+                int fileEnd = fileStart;
+                boolean inFileQuote = false;
+                char quoteChar = 0;
+                while (fileEnd < input.length()) {
+                    char fc = input.charAt(fileEnd);
+                    
+                    if (!inFileQuote && (fc == '\'' || fc == '"')) {
+                        inFileQuote = true;
+                        quoteChar = fc;
+                        fileEnd++;
+                        continue;
+                    }
+                    
+                    if (inFileQuote && fc == quoteChar) {
+                        inFileQuote = false;
+                        fileEnd++;
+                        continue;
+                    }
+                    
+                    if (!inFileQuote && (fc == ' ' || fc == '>' || (Character.isDigit(fc) && 
+                        fileEnd + 1 < input.length() && input.charAt(fileEnd + 1) == '>'))) {
+                        break;
+                    }
+                    
+                    fileEnd++;
+                }
                 
-                return new RedirectionInfo(command, file, true);
+                String file = input.substring(fileStart, fileEnd).trim();
+                // Remover comillas del nombre de archivo si existen
+                if ((file.startsWith("\"") && file.endsWith("\"")) || 
+                    (file.startsWith("'") && file.endsWith("'"))) {
+                    file = file.substring(1, file.length() - 1);
+                }
+                
+                redirections.add(new RedirectionToken(redirectStart, fileEnd, fdNumber, file));
             }
         }
         
-        // No hay redirección
-        return new RedirectionInfo(input, null, false);
+        // Si no hay redirecciones, retornar el input original
+        if (redirections.isEmpty()) {
+            return new RedirectionInfo(input, null, null, false, false);
+        }
+        
+        // Ordenar las redirecciones por posición
+        redirections.sort((a, b) -> Integer.compare(a.start, b.start));
+        
+        // Construir el comando sin las redirecciones
+        StringBuilder commandBuilder = new StringBuilder();
+        int lastPos = 0;
+        
+        for (RedirectionToken redir : redirections) {
+            commandBuilder.append(input.substring(lastPos, redir.start));
+            lastPos = redir.end;
+            
+            // Asignar el archivo según el descriptor
+            if (redir.fd == 1) {
+                stdoutFile = redir.file;
+                hasStdoutRedirection = true;
+            } else if (redir.fd == 2) {
+                stderrFile = redir.file;
+                hasStderrRedirection = true;
+            }
+        }
+        
+        commandBuilder.append(input.substring(lastPos));
+        String command = commandBuilder.toString().trim();
+        
+        return new RedirectionInfo(command, stdoutFile, stderrFile, 
+                                   hasStdoutRedirection, hasStderrRedirection);
+    }
+
+    /**
+     * Clase auxiliar para almacenar información sobre un token de redirección.
+     */
+    private static class RedirectionToken {
+        int start;      // Posición inicial del operador de redirección
+        int end;        // Posición final del nombre de archivo
+        int fd;         // Descriptor de archivo (1 = stdout, 2 = stderr)
+        String file;    // Nombre del archivo
+        
+        RedirectionToken(int start, int end, int fd, String file) {
+            this.start = start;
+            this.end = end;
+            this.fd = fd;
+            this.file = file;
+        }
     }
 
     /**
@@ -164,7 +278,7 @@ public class Main {
                     writer.write("\n");
                 }
             }
-            // Si content es null o vacío, el archivo se crea vacío o solo con salto de línea
+            // Si content es null o vacío, el archivo se crea vacío
         } catch (IOException e) {
             System.err.println("Error: cannot write to file: " + filename);
         }
@@ -349,14 +463,13 @@ public class Main {
     }
 
     /**
-     * Ejecuta un comando externo y captura su salida estándar.
-     * Los errores se muestran en stderr pero no se capturan.
+     * Ejecuta un comando externo y captura tanto stdout como stderr.
      * Usado cuando se necesita capturar la salida para redirección.
      * 
      * @param Detector Array con el comando y sus argumentos
-     * @return Salida del comando o mensaje de error
+     * @return CommandOutput con stdout y stderr del comando
      */
-    public static String executeAndCapture(String [] Detector) {
+    public static CommandOutput executeAndCapture(String [] Detector) {
         String path = System.getenv("PATH");
         Boolean found = false;
         String [] path_commands = path.split(":");
@@ -406,34 +519,31 @@ public class Main {
                     errorThread.join();
                     
                     found = true;
-
-                    // Mostrar errores si los hay
-                    if (errors.length() > 0) {
-                        String errorOutput = errors.toString();
-                        if (errorOutput.endsWith("\n")) {
-                            errorOutput = errorOutput.substring(0, errorOutput.length() - 1);
-                        }
-                        System.err.println(errorOutput);
+                    
+                    // Procesar stdout
+                    String stdoutResult = output.toString();
+                    if (stdoutResult.endsWith("\n")) {
+                        stdoutResult = stdoutResult.substring(0, stdoutResult.length() - 1);
                     }
                     
-                    // Remover el último salto de línea si existe
-                    String result = output.toString();
-                    if (result.endsWith("\n")) {
-                        result = result.substring(0, result.length() - 1);
+                    // Procesar stderr
+                    String stderrResult = errors.toString();
+                    if (stderrResult.endsWith("\n")) {
+                        stderrResult = stderrResult.substring(0, stderrResult.length() - 1);
                     }
-                    return result;
+                    
+                    return new CommandOutput(stdoutResult, stderrResult);
                     
                 } catch (IOException | InterruptedException e) {
-                    System.err.println("Error executing command: " + e.getMessage());
-                    return null;
+                    return new CommandOutput(null, "Error executing command: " + e.getMessage());
                 }
             }
         }
         
         if (found==false) {
-            return Detector[0] + ": command not found";
+            return new CommandOutput(null, Detector[0] + ": command not found");
         }
-        return null;
+        return new CommandOutput(null, null);
     }
 
     /**
