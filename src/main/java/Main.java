@@ -559,6 +559,16 @@ public class Main {
         if (!withBackslashes.equals(Detector[0])) {
             commandVariants.add(withBackslashes);
         }
+        
+        // Agregar variante con secuencias de escape convertidas
+        String withEscapes = Detector[0]
+            .replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\r", "\r")
+            .replace("\\\\", "\\");
+        if (!withEscapes.equals(Detector[0])) {
+            commandVariants.add(withEscapes);
+        }
 
         for (String dir : path_commands) {
             for (String cmdVariant : commandVariants) {
