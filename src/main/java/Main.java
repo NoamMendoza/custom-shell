@@ -77,6 +77,18 @@ public class Main {
             }
             String[] Detector = parsedArgs.toArray(new String[0]);
 
+            // DEBUG: Mostrar el comando parseado
+            if (parsedArgs.size() > 0) {
+                System.err.println("DEBUG: Comando parseado: '" + Detector[0] + "'");
+                // Mostrar cada carácter para ver si hay caracteres especiales
+                System.err.print("DEBUG: Bytes: ");
+                for (int i = 0; i < Detector[0].length(); i++) {
+                    char ch = Detector[0].charAt(i);
+                    System.err.print((int)ch + " ");
+                }
+                System.err.println();
+            }
+
             // Capturar la salida si hay redirección
             String output = null;
             String errorOutput = null;
@@ -548,6 +560,15 @@ public class Main {
         List<String> commandVariants = new ArrayList<>();
         commandVariants.add(Detector[0]); // Original
         
+        // Agregar variante con secuencias de escape convertidas (probar primero)
+        String withEscapes = Detector[0]
+            .replace("\\n", "\n")
+            .replace("\\t", "\t")
+            .replace("\\r", "\r");
+        if (!withEscapes.equals(Detector[0])) {
+            commandVariants.add(withEscapes);
+        }
+        
         // Agregar variante sin backslashes antes de comillas simples
         String withoutBackslashes = Detector[0].replace("\\'", "'");
         if (!withoutBackslashes.equals(Detector[0])) {
@@ -558,16 +579,6 @@ public class Main {
         String withBackslashes = Detector[0].replace("'", "\\'");
         if (!withBackslashes.equals(Detector[0])) {
             commandVariants.add(withBackslashes);
-        }
-        
-        // Agregar variante con secuencias de escape convertidas
-        String withEscapes = Detector[0]
-            .replace("\\n", "\n")
-            .replace("\\t", "\t")
-            .replace("\\r", "\r")
-            .replace("\\\\", "\\");
-        if (!withEscapes.equals(Detector[0])) {
-            commandVariants.add(withEscapes);
         }
 
         for (String dir : path_commands) {
@@ -815,6 +826,7 @@ public class Main {
      * 
      */
     private static String normalizeSpaces(String str) {
-        return str.replaceAll(" {2,}", " ");
+        return str.
+        replaceAll(" {2,}", " ");
+        }
     }
-}
