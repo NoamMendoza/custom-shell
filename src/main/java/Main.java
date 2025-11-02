@@ -533,7 +533,8 @@ public class Main {
 
     /**
      * Ejecuta un comando externo y captura tanto stdout como stderr.
-     * Usado cuando se necesita capturar la salida para redirección.
+     * Intenta múltiples variantes del nombre del comando para manejar
+     * diferentes formas de escape de caracteres especiales.
      * 
      * @param Detector Array con el comando y sus argumentos
      * @return CommandOutput con stdout y stderr del comando
@@ -543,76 +544,98 @@ public class Main {
         Boolean found = false;
         String [] path_commands = path.split(":");
 
+        // Lista de variantes del nombre del comando a probar
+        List<String> commandVariants = new ArrayList<>();
+        commandVariants.add(Detector[0]); // Original
+        
+        // Agregar variante sin backslashes antes de comillas simples
+        String withoutBackslashes = Detector[0].replace("\\'", "'");
+        if (!withoutBackslashes.equals(Detector[0])) {
+            commandVariants.add(withoutBackslashes);
+        }
+        
+        // Agregar variante con backslashes antes de comillas simples
+        String withBackslashes = Detector[0].replace("'", "\\'");
+        if (!withBackslashes.equals(Detector[0])) {
+            commandVariants.add(withBackslashes);
+        }
+
         for (String dir : path_commands) {
-            File file = new File(dir, Detector[0]);
-            if (file.exists() && file.canExecute()) {
-                try {
-                    ProcessBuilder pb = new ProcessBuilder(Detector);
-                    Process process = pb.start();
-                    
-                    // Leer stdout y stderr en hilos separados para evitar deadlock
-                    StringBuilder output = new StringBuilder();
-                    StringBuilder errors = new StringBuilder();
-                    
-                    // Hilo para leer stdout
-                    Thread outputThread = new Thread(() -> {
-                        try (BufferedReader reader = new BufferedReader(
-                                new InputStreamReader(process.getInputStream()))) {
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                output.append(line).append("\n");
+            for (String cmdVariant : commandVariants) {
+                File file = new File(dir, cmdVariant);
+                if (file.exists() && file.canExecute()) {
+                    try {
+                        // Crear nuevo array con la variante que funcionó
+                        String[] execArgs = Detector.clone();
+                        execArgs[0] = cmdVariant;
+                        
+                        ProcessBuilder pb = new ProcessBuilder(execArgs);
+                        Process process = pb.start();
+                        
+                        // Leer stdout y stderr en hilos separados para evitar deadlock
+                        StringBuilder output = new StringBuilder();
+                        StringBuilder errors = new StringBuilder();
+                        
+                        // Hilo para leer stdout
+                        Thread outputThread = new Thread(() -> {
+                            try (BufferedReader reader = new BufferedReader(
+                                    new InputStreamReader(process.getInputStream()))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    output.append(line).append("\n");
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    
-                    // Hilo para leer stderr
-                    Thread errorThread = new Thread(() -> {
-                        try (BufferedReader reader = new BufferedReader(
-                                new InputStreamReader(process.getErrorStream()))) {
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                errors.append(line).append("\n");
+                        });
+                        
+                        // Hilo para leer stderr
+                        Thread errorThread = new Thread(() -> {
+                            try (BufferedReader reader = new BufferedReader(
+                                    new InputStreamReader(process.getErrorStream()))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    errors.append(line).append("\n");
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        });
+                        
+                        outputThread.start();
+                        errorThread.start();
+                        
+                        int exitCode = process.waitFor();
+                        outputThread.join();
+                        errorThread.join();
+                        
+                        found = true;
+                        
+                        // Procesar stdout
+                        String stdoutResult = output.toString();
+                        if (stdoutResult.endsWith("\n")) {
+                            stdoutResult = stdoutResult.substring(0, stdoutResult.length() - 1);
                         }
-                    });
-                    
-                    outputThread.start();
-                    errorThread.start();
-                    
-                    int exitCode = process.waitFor();
-                    outputThread.join();
-                    errorThread.join();
-                    
-                    found = true;
-                    
-                    // Procesar stdout
-                    String stdoutResult = output.toString();
-                    if (stdoutResult.endsWith("\n")) {
-                        stdoutResult = stdoutResult.substring(0, stdoutResult.length() - 1);
+                        // Si stdout está vacío, retornar null en lugar de string vacío
+                        if (stdoutResult.isEmpty()) {
+                            stdoutResult = null;
+                        }
+                        
+                        // Procesar stderr
+                        String stderrResult = errors.toString();
+                        if (stderrResult.endsWith("\n")) {
+                            stderrResult = stderrResult.substring(0, stderrResult.length() - 1);
+                        }
+                        // Si stderr está vacío, retornar null en lugar de string vacío
+                        if (stderrResult.isEmpty()) {
+                            stderrResult = null;
+                        }
+                        
+                        return new CommandOutput(stdoutResult, stderrResult);
+                        
+                    } catch (IOException | InterruptedException e) {
+                        return new CommandOutput(null, "Error executing command: " + e.getMessage());
                     }
-                    // Si stdout está vacío, retornar null en lugar de string vacío
-                    if (stdoutResult.isEmpty()) {
-                        stdoutResult = null;
-                    }
-                    
-                    // Procesar stderr
-                    String stderrResult = errors.toString();
-                    if (stderrResult.endsWith("\n")) {
-                        stderrResult = stderrResult.substring(0, stderrResult.length() - 1);
-                    }
-                    // Si stderr está vacío, retornar null en lugar de string vacío
-                    if (stderrResult.isEmpty()) {
-                        stderrResult = null;
-                    }
-                    
-                    return new CommandOutput(stdoutResult, stderrResult);
-                    
-                } catch (IOException | InterruptedException e) {
-                    return new CommandOutput(null, "Error executing command: " + e.getMessage());
                 }
             }
         }
