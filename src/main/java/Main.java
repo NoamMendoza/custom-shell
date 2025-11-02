@@ -688,15 +688,12 @@ public class Main {
             
             if (isEscaped) {
                 if (inSingleQuote) {
+                    // En comillas simples, backslash es literal
                     currentArg.append('\\').append(c);
                 } else if (inDoubleQuote) {
-                    // En comillas dobles, backslash solo escapa: " \ $ `
-                    if (c == '"' || c == '\\' || c == '$' || c == '`') {
-                        currentArg.append(c);
-                    } else {
-                        // Para otros caracteres, mantener backslash literal
-                        currentArg.append('\\').append(c);
-                    }
+                    // En comillas dobles, backslash escapa cualquier carácter
+                    // (para compatibilidad con nombres de archivos)
+                    currentArg.append(c);
                 } else {
                     // Fuera de comillas, backslash escapa todo
                     currentArg.append(c);
