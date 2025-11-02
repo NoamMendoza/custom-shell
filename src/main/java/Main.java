@@ -535,8 +535,7 @@ public class Main {
      * Ejecuta un comando externo y captura tanto stdout como stderr.
      * Intenta múltiples variantes del nombre del comando para manejar
      * diferentes formas de escape de caracteres especiales.
-     * 
-     * @param Detector Array con el comando y sus argumentos
+     * * @param Detector Array con el comando y sus argumentos
      * @return CommandOutput con stdout y stderr del comando
      */
     public static CommandOutput executeAndCapture(String [] Detector) {
@@ -560,15 +559,21 @@ public class Main {
             commandVariants.add(withBackslashes);
         }
         
+        // --- INICIO CORRECCIÓN ---
+        // Se elimina el bloque que interpretaba incorrectamente secuencias de escape.
+        // El parser de argumentos ya nos da el nombre literal del archivo.
+        /*
         // Agregar variante con secuencias de escape convertidas
         String withEscapes = Detector[0]
-            .replace("\\n", "\n")
-            .replace("\\t", "\t")
-            .replace("\\r", "\r")
-            .replace("\\\\", "\\");
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\\\", "\\");
         if (!withEscapes.equals(Detector[0])) {
             commandVariants.add(withEscapes);
         }
+        */
+        // --- FIN CORRECCIÓN ---
 
         for (String dir : path_commands) {
             for (String cmdVariant : commandVariants) {
@@ -581,6 +586,8 @@ public class Main {
                         
                         ProcessBuilder pb = new ProcessBuilder(execArgs);
                         Process process = pb.start();
+                        
+                        // ... (El resto del método no cambia) ...
                         
                         // Leer stdout y stderr en hilos separados para evitar deadlock
                         StringBuilder output = new StringBuilder();
@@ -705,8 +712,7 @@ public class Main {
     /**
      * Parsea una línea de comando en argumentos individuales.
      * Respeta comillas simples, dobles y caracteres escapados según las reglas de bash.
-     * 
-     * @param input Línea de comando a parsear
+     * * @param input Línea de comando a parsear
      * @return Lista de argumentos parseados
      */
     public static List<String> parseArguments(String input) {
@@ -720,34 +726,31 @@ public class Main {
             char c = input.charAt(i);
             
             if (isEscaped) {
-                if (inSingleQuote) {
-                    // En comillas simples, backslash es literal
-                    currentArg.append('\\').append(c);
-                } else if (inDoubleQuote) {
-                    // En comillas dobles, backslash escapa cualquier carácter
-                    // (para compatibilidad con nombres de archivos)
-                    currentArg.append(c);
-                } else {
-                    // Fuera de comillas, backslash escapa todo
-                    currentArg.append(c);
-                }
+                // --- INICIO CORRECCIÓN ---
+                // El carácter anterior era '\' (y no estábamos en comillas simples),
+                // así que añadimos este carácter literalmente, sea lo que sea.
+                currentArg.append(c);
                 isEscaped = false;
                 continue;
+                // --- FIN CORRECCIÓN ---
             }
             
-            if (c == '\\') {
+            // --- INICIO CORRECCIÓN ---
+            // La barra invertida SÓLO escapa si NO está dentro de comillas simples.
+            if (c == '\\' && !inSingleQuote) {
                 isEscaped = true;
-                continue;
+                continue; // No añadas la barra invertida, solo activa el flag.
             }
+            // --- FIN CORRECCIÓN ---
             
             if (c == '\'' && !inDoubleQuote) {
                 inSingleQuote = !inSingleQuote;
-                continue;
+                continue; // No añadas la comilla al argumento
             }
             
             if (c == '"' && !inSingleQuote) {
                 inDoubleQuote = !inDoubleQuote;
-                continue;
+                continue; // No añadas la comilla al argumento
             }
             
             if (c == ' ' && !inSingleQuote && !inDoubleQuote) {
@@ -758,6 +761,11 @@ public class Main {
                 continue;
             }
             
+            // Añade el carácter actual.
+            // Esto incluirá:
+            // - Caracteres normales.
+            // - La barra invertida '\' si estábamos inSingleQuote (porque el check de escape falló).
+            // - El carácter 'n' que sigue a '\' en inSingleQuote.
             currentArg.append(c);
         }
         
