@@ -7,13 +7,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.Completer;
-import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.reader.impl.completer.AggregateCompleter;
 import org.jline.reader.impl.completer.ArgumentCompleter;
 import org.jline.reader.impl.completer.NullCompleter;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
@@ -781,6 +782,7 @@ public class Main {
      * 
      * @param str Cadena a normalizar
      * @return Cadena con espacios normalizados
+     * 
      */
     private static String normalizeSpaces(String str) {
         return str.replaceAll(" {2,}", " ");
