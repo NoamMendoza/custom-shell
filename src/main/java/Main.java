@@ -559,21 +559,9 @@ public class Main {
             commandVariants.add(withBackslashes);
         }
         
-        // --- INICIO CORRECCIÓN ---
-        // Se elimina el bloque que interpretaba incorrectamente secuencias de escape.
-        // El parser de argumentos ya nos da el nombre literal del archivo.
-        /*
-        // Agregar variante con secuencias de escape convertidas
-        String withEscapes = Detector[0]
-                .replace("\\n", "\n")
-                .replace("\\t", "\t")
-                .replace("\\r", "\r")
-                .replace("\\\\", "\\");
-        if (!withEscapes.equals(Detector[0])) {
-            commandVariants.add(withEscapes);
-        }
-        */
-        // --- FIN CORRECCIÓN ---
+        // --- SE ELIMINA EL BLOQUE BUGGY ---
+        // El bloque que contenía .replace("\\n", "\n") ha sido eliminado.
+        // No debe estar aquí.
 
         for (String dir : path_commands) {
             for (String cmdVariant : commandVariants) {
@@ -586,8 +574,6 @@ public class Main {
                         
                         ProcessBuilder pb = new ProcessBuilder(execArgs);
                         Process process = pb.start();
-                        
-                        // ... (El resto del método no cambia) ...
                         
                         // Leer stdout y stderr en hilos separados para evitar deadlock
                         StringBuilder output = new StringBuilder();
@@ -726,22 +712,18 @@ public class Main {
             char c = input.charAt(i);
             
             if (isEscaped) {
-                // --- INICIO CORRECCIÓN ---
                 // El carácter anterior era '\' (y no estábamos en comillas simples),
                 // así que añadimos este carácter literalmente, sea lo que sea.
                 currentArg.append(c);
                 isEscaped = false;
                 continue;
-                // --- FIN CORRECCIÓN ---
             }
             
-            // --- INICIO CORRECCIÓN ---
             // La barra invertida SÓLO escapa si NO está dentro de comillas simples.
             if (c == '\\' && !inSingleQuote) {
                 isEscaped = true;
                 continue; // No añadas la barra invertida, solo activa el flag.
             }
-            // --- FIN CORRECCIÓN ---
             
             if (c == '\'' && !inDoubleQuote) {
                 inSingleQuote = !inSingleQuote;
