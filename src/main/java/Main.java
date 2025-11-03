@@ -46,18 +46,12 @@ public class Main {
                 .build();
         
         // Crear un único completer para todos los comandos
-        Completer completer = new ArgumentCompleter(
-            new StringsCompleter(allCommands),
-            NullCompleter.INSTANCE
-        );
+        Completer completer = new CustomCompleter(allCommands);
         
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .completer(completer)
                 .variable("disable-escape-chars", true)
-                .variable("bell-style", "audible")
-                .variable("list-max", 100)
-                .variable("menu-complete", false)
                 .build();
         
         while (true) {
@@ -147,6 +141,50 @@ public class Main {
             }
         }
         return new java.util.ArrayList<>(executables);
+    }
+
+    private static class CustomCompleter implements Completer {
+        private final StringsCompleter delegate;
+        private String lastWord = null;
+        private int tabPressCount = 0;
+
+        public CustomCompleter(List<String> commands) {
+            this.delegate = new StringsCompleter(commands);
+        }
+
+        @Override
+        public void complete(LineReader reader, org.jline.reader.ParsedLine line, List<org.jline.reader.Candidate> candidates) {
+            String word = line.word();
+            if (word == null) {
+                word = "";
+            }
+
+            if (!word.equals(this.lastWord)) {
+                this.lastWord = word;
+                this.tabPressCount = 0;
+            }
+            this.tabPressCount++;
+
+            List<org.jline.reader.Candidate> delegateCandidates = new ArrayList<>();
+            this.delegate.complete(reader, line, delegateCandidates);
+
+            if (delegateCandidates.size() > 1) {
+                if (this.tabPressCount == 1) {
+                    // On first press with multiple candidates, do nothing.
+                    // This should cause the bell to ring.
+                    candidates.clear();
+                } else {
+                    // On second press, provide all candidates.
+                    // jline should then display them.
+                    candidates.addAll(delegateCandidates);
+                    // Reset for next completion cycle
+                    this.tabPressCount = 0;
+                }
+            } else {
+                // 0 or 1 candidate, let jline handle it normally.
+                candidates.addAll(delegateCandidates);
+            }
+        }
     }
 
     /**
