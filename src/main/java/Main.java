@@ -713,9 +713,19 @@ public class Main {
             char c = input.charAt(i);
             
             if (isEscaped) {
-                // El carácter anterior era '\' (y no estábamos en comillas simples),
-                // así que añadimos este carácter literalmente, sea lo que sea.
-                currentArg.append(c);
+                // In double quotes, \ only escapes ", $, `, \
+                // In this simplified shell, let's assume it only escapes " and \
+                if (inDoubleQuote) {
+                    if (c == '"' || c == '\\') {
+                        currentArg.append(c);
+                    } else {
+                        // Not a special character, so the backslash is literal
+                        currentArg.append('\\');
+                        currentArg.append(c);
+                    }
+                } else { // Not in quotes
+                    currentArg.append(c);
+                }
                 isEscaped = false;
                 continue;
             }
