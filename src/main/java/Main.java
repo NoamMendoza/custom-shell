@@ -46,10 +46,7 @@ public class Main {
                 .build();
         
         // Crear un único completer para todos los comandos
-        Completer completer = new ArgumentCompleter(
-            new StringsCompleter(allCommands),
-            NullCompleter.INSTANCE
-        );
+        Completer completer = new StringsCompleter(allCommands);
         
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
