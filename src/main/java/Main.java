@@ -53,8 +53,10 @@ public class Main {
         
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
-                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                 .completer(completer)
+                .variable("disable-escape-chars", true)
+                .variable("bell-style", "audible")
+                .variable("list-max", 100)
                 .build();
         
         while (true) {
