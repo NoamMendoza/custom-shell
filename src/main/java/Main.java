@@ -32,23 +32,24 @@ public class Main {
     public static void main(String[] args) throws Exception {
         
         ArrayList<String> commands = new ArrayList<>(Arrays.asList("echo", "type", "exit", "pwd", "cd"));
+
+        // Obtener ejecutables del PATH
+        List<String> pathExecutables = getExecutablesFromPath();
         
+        // Combinar comandos builtin y del PATH
+        List<String> allCommands = new ArrayList<>(commands);
+        allCommands.addAll(pathExecutables);
+
         // Configurar terminal y line reader con autocompletado
         Terminal terminal = TerminalBuilder.builder()
                 .system(true)
                 .build();
         
-        // Crear completers para cada comando
-        List<Completer> completers = new ArrayList<>();
-        for (String cmd : commands) {
-            completers.add(new ArgumentCompleter(
-                new StringsCompleter(cmd),
-                NullCompleter.INSTANCE
-            ));
-        }
-        
-        // Agregar completer agregado
-        Completer completer = new AggregateCompleter(completers);
+        // Crear un único completer para todos los comandos
+        Completer completer = new ArgumentCompleter(
+            new StringsCompleter(allCommands),
+            NullCompleter.INSTANCE
+        );
         
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
@@ -121,6 +122,28 @@ public class Main {
         }
         
         terminal.close();
+    }
+
+    private static List<String> getExecutablesFromPath() {
+        java.util.Set<String> executables = new java.util.HashSet<>();
+        String path = System.getenv("PATH");
+        if (path != null) {
+            String[] pathDirs = path.split(java.io.File.pathSeparator);
+            for (String dirPath : pathDirs) {
+                java.io.File dir = new java.io.File(dirPath);
+                if (dir.exists() && dir.isDirectory()) {
+                    java.io.File[] files = dir.listFiles();
+                    if (files != null) {
+                        for (java.io.File file : files) {
+                            if (file.isFile() && file.canExecute()) {
+                                executables.add(file.getName());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return new java.util.ArrayList<>(executables);
     }
 
     /**
