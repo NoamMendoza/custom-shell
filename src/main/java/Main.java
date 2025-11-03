@@ -46,7 +46,10 @@ public class Main {
                 .build();
         
         // Crear un único completer para todos los comandos
-        Completer completer = new StringsCompleter(allCommands);
+        Completer completer = new ArgumentCompleter(
+            new StringsCompleter(allCommands),
+            NullCompleter.INSTANCE
+        );
         
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
@@ -54,6 +57,7 @@ public class Main {
                 .variable("disable-escape-chars", true)
                 .variable("bell-style", "audible")
                 .variable("list-max", 100)
+                .variable("menu-complete", false)
                 .build();
         
         while (true) {
