@@ -55,6 +55,9 @@ cd ../../
 cd ./Downloads
 ```
 
+# Autocompletion
+Can autocomplete diferent buildtin and external commands. When there are multiple commands with similar prefixes and press Tab two times, the first time rigs a bell, the second print a new line with all the comands who start with the sufix.
+
 # For the future
 
 Implement as buildtin commands:
