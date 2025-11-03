@@ -52,6 +52,7 @@ public class Main {
         
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
+                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                 .completer(completer)
                 .build();
         
