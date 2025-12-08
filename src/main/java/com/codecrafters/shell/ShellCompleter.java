@@ -7,7 +7,9 @@ import org.jline.reader.ParsedLine;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implementación de Completer para JLine.
@@ -40,7 +42,7 @@ public class ShellCompleter implements Completer {
         }
         this.tabPressCount++;
 
-        List<String> matches = new ArrayList<>();
+        Set<String> matches = new HashSet<>();
         for (String cmd : commands) {
             if (cmd.startsWith(word)) {
                 matches.add(cmd);
@@ -64,10 +66,11 @@ public class ShellCompleter implements Completer {
                 // On second press, provide all candidates but handle display manually
                 candidates.clear();
                 
-                Collections.sort(matches);
+                List<String> sortedMatches = new ArrayList<>(matches);
+                Collections.sort(sortedMatches);
                 
                 reader.getTerminal().writer().println();
-                reader.getTerminal().writer().print(String.join("  ", matches));
+                reader.getTerminal().writer().print(String.join("  ", sortedMatches));
                 reader.getTerminal().writer().println();
                 reader.callWidget(LineReader.REDRAW_LINE);
                 reader.getTerminal().writer().flush();
