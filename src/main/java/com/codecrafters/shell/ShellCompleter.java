@@ -50,8 +50,21 @@ public class ShellCompleter implements Completer {
                 candidates.clear();
             } else {
                 // On second press, provide all candidates.
-                // jline should then display them.
-                candidates.addAll(delegateCandidates);
+                // We handle display manually to ensure 2 spaces between candidates as requested.
+                candidates.clear();
+                
+                List<String> values = new ArrayList<>();
+                for (Candidate c : delegateCandidates) {
+                    values.add(c.value());
+                }
+                java.util.Collections.sort(values);
+                
+                reader.getTerminal().writer().println();
+                reader.getTerminal().writer().print(String.join("  ", values));
+                reader.getTerminal().writer().println();
+                reader.callWidget(org.jline.reader.LineReader.REDRAW_LINE);
+                reader.getTerminal().writer().flush();
+                
                 // Reset for next completion cycle
                 this.tabPressCount = 0;
             }
