@@ -4,9 +4,9 @@ import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
-import org.jline.reader.impl.completer.StringsCompleter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -15,7 +15,7 @@ import java.util.List;
  * Maneja la lógica de doble tabulación para mostrar todas las opciones.
  */
 public class ShellCompleter implements Completer {
-    private final StringsCompleter delegate;
+    private final List<String> commands;
     private String lastWord = null;
     private int tabPressCount = 0;
 
@@ -24,7 +24,7 @@ public class ShellCompleter implements Completer {
      * @param commands Lista de nombres de comandos para autocompletar.
      */
     public ShellCompleter(List<String> commands) {
-        this.delegate = new StringsCompleter(commands);
+        this.commands = commands;
     }
 
     @Override
@@ -40,37 +40,41 @@ public class ShellCompleter implements Completer {
         }
         this.tabPressCount++;
 
-        List<Candidate> delegateCandidates = new ArrayList<>();
-        this.delegate.complete(reader, line, delegateCandidates);
+        List<String> matches = new ArrayList<>();
+        for (String cmd : commands) {
+            if (cmd.startsWith(word)) {
+                matches.add(cmd);
+            }
+        }
+        
+        if (matches.isEmpty()) {
+            return;
+        }
+        
+        // Add candidates for JLine to handle completion
+        for (String match : matches) {
+            candidates.add(new Candidate(match));
+        }
 
-        if (delegateCandidates.size() > 1) {
+        if (matches.size() > 1) {
             if (this.tabPressCount == 1) {
-                // On first press with multiple candidates, do nothing.
-                // This should cause the bell to ring.
+                // On first press with multiple candidates, clear to ring bell
                 candidates.clear();
             } else {
-                // On second press, provide all candidates.
-                // We handle display manually to ensure 2 spaces between candidates as requested.
+                // On second press, provide all candidates but handle display manually
                 candidates.clear();
                 
-                List<String> values = new ArrayList<>();
-                for (Candidate c : delegateCandidates) {
-                    values.add(c.value());
-                }
-                java.util.Collections.sort(values);
+                Collections.sort(matches);
                 
                 reader.getTerminal().writer().println();
-                reader.getTerminal().writer().print(String.join("  ", values));
+                reader.getTerminal().writer().print(String.join("  ", matches));
                 reader.getTerminal().writer().println();
-                reader.callWidget(org.jline.reader.LineReader.REDRAW_LINE);
+                reader.callWidget(LineReader.REDRAW_LINE);
                 reader.getTerminal().writer().flush();
                 
                 // Reset for next completion cycle
                 this.tabPressCount = 0;
             }
-        } else {
-            // 0 or 1 candidate, let jline handle it normally.
-            candidates.addAll(delegateCandidates);
         }
     }
 }
