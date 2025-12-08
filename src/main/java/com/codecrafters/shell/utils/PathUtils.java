@@ -47,10 +47,13 @@ public class PathUtils {
      */
     public static File findExecutable(String command) {
         String path = System.getenv("PATH");
+        System.out.println("Debug: PATH=" + path);
         if (path == null) return null;
         
         String[] pathDirs = path.split(File.pathSeparator);
+        System.out.println("Debug: Path dirs count: " + pathDirs.length);
         for (String dirPath : pathDirs) {
+            System.out.println("Debug: Checking dir: " + dirPath);
             File dir = new File(dirPath);
             File file = new File(dirPath, command);
             if (file.exists() && file.canExecute()) {
