@@ -55,6 +55,8 @@ public class PathUtils {
             if (file.exists() && file.canExecute()) {
                 return file;
             }
+            // Debug: print what we checked
+            // System.out.println("Checked: " + file.getAbsolutePath() + " -> " + file.exists());
         }
         return null;
     }

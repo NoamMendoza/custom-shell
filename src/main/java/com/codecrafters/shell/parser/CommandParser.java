@@ -167,7 +167,7 @@ public class CommandParser {
 
             if (isEscaped) {
                 if (inDoubleQuote) {
-                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == '\n') {
+                    if (c == '"' || c == '\\' || c == '$' || c == '`') {
                         currentArg.append(c);
                     } else {
                         currentArg.append('\\');
