@@ -25,12 +25,6 @@ public class ExternalCommandExecutor {
         File executable = PathUtils.findExecutable(commandName);
 
         if (executable == null) {
-            System.out.println("Debug: Command not found: '" + commandName + "'");
-            System.out.print("Debug: Hex: ");
-            for (char c : commandName.toCharArray()) {
-                System.out.print(String.format("%04x ", (int)c));
-            }
-            System.out.println();
             return new ExecutionResult(null, commandName + ": command not found", 127);
         }
 

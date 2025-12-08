@@ -156,7 +156,6 @@ public class CommandParser {
      * @return Lista de argumentos.
      */
     public List<String> parseArguments(String input) {
-        System.out.println("Debug: parseArguments input: " + input);
         List<String> arguments = new ArrayList<>();
         StringBuilder currentArg = new StringBuilder();
         boolean inSingleQuote = false;
@@ -168,10 +167,9 @@ public class CommandParser {
 
             if (isEscaped) {
                 if (inDoubleQuote) {
-                    if (c == '"' || c == '\\' || c == '$' || c == '`') {
+                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == '\'') {
                         currentArg.append(c);
                     } else {
-                        System.out.println("Debug: Appending backslash for char: " + c);
                         currentArg.append('\\');
                         currentArg.append(c);
                     }

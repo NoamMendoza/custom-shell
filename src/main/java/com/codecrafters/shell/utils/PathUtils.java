@@ -47,29 +47,13 @@ public class PathUtils {
      */
     public static File findExecutable(String command) {
         String path = System.getenv("PATH");
-        System.out.println("Debug: PATH=" + path);
         if (path == null) return null;
         
-        String[] pathDirs = path.split(File.pathSeparator);
-        System.out.println("Debug: Path dirs count: " + pathDirs.length);
+        String[] pathDirs = path.split("[:;]");
         for (String dirPath : pathDirs) {
-            System.out.println("Debug: Checking dir: " + dirPath);
-            File dir = new File(dirPath);
             File file = new File(dirPath, command);
             if (file.exists() && file.canExecute()) {
                 return file;
-            }
-            // Debug: print what we checked
-            System.out.println("Debug: Checked: " + file.getAbsolutePath() + " -> " + file.exists());
-            
-            if (dir.exists() && dir.isDirectory()) {
-                System.out.println("Debug: Listing files in " + dir.getAbsolutePath() + ":");
-                File[] files = dir.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        System.out.println("  - '" + f.getName() + "'");
-                    }
-                }
             }
         }
         return null;
