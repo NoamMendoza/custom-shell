@@ -56,7 +56,7 @@ public class PathUtils {
                 return file;
             }
             // Debug: print what we checked
-            // System.out.println("Checked: " + file.getAbsolutePath() + " -> " + file.exists());
+            System.out.println("Debug: Checked: " + file.getAbsolutePath() + " -> " + file.exists());
         }
         return null;
     }
