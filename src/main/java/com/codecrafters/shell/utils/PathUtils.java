@@ -51,12 +51,23 @@ public class PathUtils {
         
         String[] pathDirs = path.split(File.pathSeparator);
         for (String dirPath : pathDirs) {
+            File dir = new File(dirPath);
             File file = new File(dirPath, command);
             if (file.exists() && file.canExecute()) {
                 return file;
             }
             // Debug: print what we checked
             System.out.println("Debug: Checked: " + file.getAbsolutePath() + " -> " + file.exists());
+            
+            if (dir.exists() && dir.isDirectory()) {
+                System.out.println("Debug: Listing files in " + dir.getAbsolutePath() + ":");
+                File[] files = dir.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        System.out.println("  - '" + f.getName() + "'");
+                    }
+                }
+            }
         }
         return null;
     }
