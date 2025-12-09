@@ -62,9 +62,16 @@ public class Shell {
 
         ShellCompleter completer = new ShellCompleter(allCommands);
 
+        // Configurar parser para NO procesar escapes automáticamente
+        org.jline.reader.Parser jlineParser = new org.jline.reader.impl.DefaultParser()
+                .eofOnUnclosedQuote(false)
+                .eofOnEscapedNewLine(false)
+                .escapeChars(null);  // Deshabilitar procesamiento de escapes
+
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .completer(completer)
+                .parser(jlineParser)
                 .variable("columns", 80)
                 .build();
 

@@ -156,12 +156,6 @@ public class CommandParser {
      * @return Lista de argumentos.
      */
     public List<String> parseArguments(String input) {
-        // Log temporal para depuración
-        if (input.contains("single")) {
-            System.err.println("[PARSER] Input: '" + input + "'");
-            System.err.println("[PARSER] Bytes: " + java.util.Arrays.toString(input.getBytes()));
-        }
-        
         List<String> arguments = new ArrayList<>();
         StringBuilder currentArg = new StringBuilder();
         boolean inSingleQuote = false;
