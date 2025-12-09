@@ -29,15 +29,9 @@ public class ExternalCommandExecutor {
         }
 
         try {
-            // Crear lista de argumentos con la ruta absoluta del ejecutable
-            // pero manteniendo el nombre original como argv[0]
-            List<String> execArgs = new java.util.ArrayList<>();
-            execArgs.add(executable.getAbsolutePath());
-            for (int i = 1; i < commandArgs.size(); i++) {
-                execArgs.add(commandArgs.get(i));
-            }
-            
-            ProcessBuilder pb = new ProcessBuilder(execArgs);
+            // Usar los argumentos originales tal cual
+            // ProcessBuilder buscará el ejecutable en el PATH del sistema
+            ProcessBuilder pb = new ProcessBuilder(commandArgs);
             Process process = pb.start();
 
             StringBuilder output = new StringBuilder();
