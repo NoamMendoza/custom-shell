@@ -58,6 +58,19 @@ public class PathUtils {
                 continue;
             }
             
+            // Log temporal para depuración
+            if (command.contains("single")) {
+                System.err.println("[TEMP] Directorio: " + dirPath);
+                File[] allFiles = dir.listFiles();
+                if (allFiles != null) {
+                    for (File f : allFiles) {
+                        if (f.getName().contains("single") || f.getName().contains("'")) {
+                            System.err.println("[TEMP]   Archivo: '" + f.getName() + "' (len=" + f.getName().length() + ")");
+                        }
+                    }
+                }
+            }
+            
             // Listar archivos y buscar por nombre exacto
             // Esto evita problemas con caracteres especiales en nombres de archivo
             File[] files = dir.listFiles();
