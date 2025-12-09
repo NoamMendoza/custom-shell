@@ -149,7 +149,7 @@ public class CommandParser {
     }
 
     /**
-     * Parsea una cadena de comando en una lista de argumentos. ----
+     * Parsea una cadena de comando en una lista de argumentos. -----
      * Respeta comillas simples y dobles, y caracteres de escape.
      * 
      * @param input Cadena de comando (sin redirecciones).
