@@ -65,7 +65,6 @@ public class Shell {
         LineReader reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .completer(completer)
-                .variable("disable-escape-chars", true)
                 .variable("columns", 80)
                 .build();
 

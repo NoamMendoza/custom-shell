@@ -23,12 +23,6 @@ public class ExternalCommandExecutor {
      */
     public ExecutionResult execute(List<String> commandArgs) {
         String commandName = commandArgs.get(0);
-        
-        // Log temporal solo para depuración del caso específico
-        if (commandName.contains("single")) {
-            System.err.println("[TEMP] Buscando: '" + commandName + "' (len=" + commandName.length() + ")");
-        }
-        
         File executable = PathUtils.findExecutable(commandName);
 
         if (executable == null) {
