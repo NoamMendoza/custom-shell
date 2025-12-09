@@ -54,28 +54,21 @@ public class PathUtils {
         for (String dirPath : pathDirs) {
             File dir = new File(dirPath);
             
-            // Debug: listar archivos en el directorio
-            if (dir.exists() && dir.isDirectory()) {
-                System.err.println("[PATH DEBUG] Buscando '" + command + "' en: " + dirPath);
-                File[] files = dir.listFiles();
-                if (files != null) {
-                    System.err.println("[PATH DEBUG] Archivos en directorio:");
-                    for (File f : files) {
-                        System.err.println("[PATH DEBUG]   - '" + f.getName() + "'");
+            if (!dir.exists() || !dir.isDirectory()) {
+                continue;
+            }
+            
+            // Listar archivos y buscar por nombre exacto
+            // Esto evita problemas con caracteres especiales en nombres de archivo
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.getName().equals(command) && file.isFile()) {
+                        return file;
                     }
                 }
             }
-            
-            File file = new File(dirPath, command);
-            
-            // En sistemas Unix, verificar solo si existe
-            // canExecute() puede fallar para archivos con nombres especiales
-            if (file.exists()) {
-                System.err.println("[PATH DEBUG] ¡Encontrado! " + file.getAbsolutePath());
-                return file;
-            }
         }
-        System.err.println("[PATH DEBUG] No se encontró: '" + command + "'");
         return null;
     }
 }
