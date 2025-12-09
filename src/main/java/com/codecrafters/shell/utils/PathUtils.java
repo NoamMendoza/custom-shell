@@ -50,13 +50,36 @@ public class PathUtils {
         String path = System.getenv("PATH");
         if (path == null) return null;
         
+        // Log temporal para depuración de my_exe
+        if (command.equals("my_exe")) {
+            System.err.println("[DEBUG] Buscando: " + command);
+            System.err.println("[DEBUG] PATH completo: " + path);
+        }
+        
         // Usar File.pathSeparator para compatibilidad multiplataforma
         String[] pathDirs = path.split(File.pathSeparator);
         for (String dirPath : pathDirs) {
             File dir = new File(dirPath);
             
             if (!dir.exists() || !dir.isDirectory()) {
+                if (command.equals("my_exe")) {
+                    System.err.println("[DEBUG] Directorio no existe o no es directorio: " + dirPath);
+                }
                 continue;
+            }
+            
+            // Log temporal para my_exe
+            if (command.equals("my_exe")) {
+                System.err.println("[DEBUG] Buscando en: " + dirPath);
+                File[] allFiles = dir.listFiles();
+                if (allFiles != null) {
+                    System.err.println("[DEBUG] Archivos en " + dirPath + ":");
+                    for (File f : allFiles) {
+                        System.err.println("[DEBUG]   - " + f.getName() + " (isFile=" + f.isFile() + ")");
+                    }
+                } else {
+                    System.err.println("[DEBUG] listFiles() devolvió null para " + dirPath);
+                }
             }
             
             // Listar archivos y buscar por nombre exacto
@@ -65,10 +88,17 @@ public class PathUtils {
             if (files != null) {
                 for (File file : files) {
                     if (file.getName().equals(command) && file.isFile()) {
+                        if (command.equals("my_exe")) {
+                            System.err.println("[DEBUG] ¡ENCONTRADO! " + file.getAbsolutePath());
+                        }
                         return file;
                     }
                 }
             }
+        }
+        
+        if (command.equals("my_exe")) {
+            System.err.println("[DEBUG] NO ENCONTRADO en ningún directorio del PATH");
         }
         return null;
     }
