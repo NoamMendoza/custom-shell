@@ -1,0 +1,4 @@
+Con escape: 'exe with 'single quotes''
+Longitud: 24
+Con backslash literal: 'exe with \'single quotes\''
+Longitud: 26

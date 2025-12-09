@@ -1,0 +1,4 @@
+Test 3: "exe with \'single quotes\'" /tmp/dog/f3
+Resultado: [exe with 'single quotes', /tmp/dog/f3]
+Primer argumento: 'exe with 'single quotes''
+Longitud: 24

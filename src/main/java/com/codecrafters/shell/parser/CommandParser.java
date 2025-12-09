@@ -167,7 +167,9 @@ public class CommandParser {
 
             if (isEscaped) {
                 if (inDoubleQuote) {
-                    if (c == '"' || c == '\\' || c == '$' || c == '`' || c == '\'') {
+                    // En bash, dentro de comillas dobles solo estos caracteres son especiales cuando escapados
+                    // La comilla simple NO es especial, así que \' produce \ seguido de '
+                    if (c == '"' || c == '\\' || c == '$' || c == '`') {
                         currentArg.append(c);
                     } else {
                         currentArg.append('\\');
