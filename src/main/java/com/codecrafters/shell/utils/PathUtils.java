@@ -43,7 +43,8 @@ public class PathUtils {
      * Busca un ejecutable en el PATH del sistema.
      * 
      * @param command Nombre del comando a buscar.
-     * @return Archivo ejecutable si se encuentra, o null si no existe.
+     * @return Archivo ejecutable si se encuentra, o null si no existe. -
+     * 
      */
     public static File findExecutable(String command) {
         String path = System.getenv("PATH");
