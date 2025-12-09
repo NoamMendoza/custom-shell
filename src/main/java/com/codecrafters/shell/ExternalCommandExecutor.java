@@ -23,6 +23,12 @@ public class ExternalCommandExecutor {
      */
     public ExecutionResult execute(List<String> commandArgs) {
         String commandName = commandArgs.get(0);
+        
+        // Debug: mostrar el nombre exacto del comando
+        System.err.println("[EXEC DEBUG] Comando a buscar: '" + commandName + "'");
+        System.err.println("[EXEC DEBUG] Longitud: " + commandName.length());
+        System.err.println("[EXEC DEBUG] Bytes: " + java.util.Arrays.toString(commandName.getBytes()));
+        
         File executable = PathUtils.findExecutable(commandName);
 
         if (executable == null) {

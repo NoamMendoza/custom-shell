@@ -52,14 +52,30 @@ public class PathUtils {
         // Usar File.pathSeparator para compatibilidad multiplataforma
         String[] pathDirs = path.split(File.pathSeparator);
         for (String dirPath : pathDirs) {
+            File dir = new File(dirPath);
+            
+            // Debug: listar archivos en el directorio
+            if (dir.exists() && dir.isDirectory()) {
+                System.err.println("[PATH DEBUG] Buscando '" + command + "' en: " + dirPath);
+                File[] files = dir.listFiles();
+                if (files != null) {
+                    System.err.println("[PATH DEBUG] Archivos en directorio:");
+                    for (File f : files) {
+                        System.err.println("[PATH DEBUG]   - '" + f.getName() + "'");
+                    }
+                }
+            }
+            
             File file = new File(dirPath, command);
             
             // En sistemas Unix, verificar solo si existe
             // canExecute() puede fallar para archivos con nombres especiales
             if (file.exists()) {
+                System.err.println("[PATH DEBUG] ¡Encontrado! " + file.getAbsolutePath());
                 return file;
             }
         }
+        System.err.println("[PATH DEBUG] No se encontró: '" + command + "'");
         return null;
     }
 }
