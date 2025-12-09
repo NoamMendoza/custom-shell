@@ -54,14 +54,9 @@ public class PathUtils {
         for (String dirPath : pathDirs) {
             File file = new File(dirPath, command);
             
-            // Debug: imprimir información de búsqueda
-            System.err.println("[DEBUG] Buscando: " + command);
-            System.err.println("[DEBUG] En directorio: " + dirPath);
-            System.err.println("[DEBUG] Ruta completa: " + file.getAbsolutePath());
-            System.err.println("[DEBUG] Existe: " + file.exists());
-            System.err.println("[DEBUG] Es ejecutable: " + file.canExecute());
-            
-            if (file.exists() && file.canExecute()) {
+            // En sistemas Unix, verificar solo si existe
+            // canExecute() puede fallar para archivos con nombres especiales
+            if (file.exists()) {
                 return file;
             }
         }

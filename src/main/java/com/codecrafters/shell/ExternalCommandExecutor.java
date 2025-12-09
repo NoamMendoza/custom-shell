@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Ejecutor de comandos externos del sistema.
- * Se encarga de buscar el ejecutable en el PATH y ejecutarlo en un proceso separado.
+ * Se encarga de buscar el ejecutable en el PATH y ejecutarlo en un proceso separado. -
  */
 public class ExternalCommandExecutor {
 
