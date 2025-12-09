@@ -30,14 +30,21 @@ public class ExternalCommandExecutor {
         }
 
         try {
-            // Crear una nueva lista de argumentos con la ruta completa del ejecutable
-            List<String> execArgs = new ArrayList<>();
-            execArgs.add(executable.getAbsolutePath());
-            for (int i = 1; i < commandArgs.size(); i++) {
-                execArgs.add(commandArgs.get(i));
+            // Usar el nombre original del comando como argv[0], pero ejecutar desde la ruta absoluta
+            // ProcessBuilder necesita la ruta completa para encontrar el ejecutable
+            ProcessBuilder pb = new ProcessBuilder(commandArgs);
+            pb.directory(executable.getParentFile());  // Establecer el directorio de trabajo
+            
+            // Actualizar la variable de entorno PATH para incluir el directorio del ejecutable
+            java.util.Map<String, String> env = pb.environment();
+            String currentPath = env.get("PATH");
+            String execDir = executable.getParent();
+            if (currentPath != null && !currentPath.isEmpty()) {
+                env.put("PATH", execDir + java.io.File.pathSeparator + currentPath);
+            } else {
+                env.put("PATH", execDir);
             }
             
-            ProcessBuilder pb = new ProcessBuilder(execArgs);
             Process process = pb.start();
 
             StringBuilder output = new StringBuilder();
