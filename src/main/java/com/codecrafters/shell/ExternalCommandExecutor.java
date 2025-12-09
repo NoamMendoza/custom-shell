@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,14 @@ public class ExternalCommandExecutor {
         }
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(commandArgs);
+            // Crear una nueva lista de argumentos con la ruta completa del ejecutable
+            List<String> execArgs = new ArrayList<>();
+            execArgs.add(executable.getAbsolutePath());
+            for (int i = 1; i < commandArgs.size(); i++) {
+                execArgs.add(commandArgs.get(i));
+            }
+            
+            ProcessBuilder pb = new ProcessBuilder(execArgs);
             Process process = pb.start();
 
             StringBuilder output = new StringBuilder();
