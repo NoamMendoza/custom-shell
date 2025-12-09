@@ -49,9 +49,18 @@ public class PathUtils {
         String path = System.getenv("PATH");
         if (path == null) return null;
         
-        String[] pathDirs = path.split("[:;]");
+        // Usar File.pathSeparator para compatibilidad multiplataforma
+        String[] pathDirs = path.split(File.pathSeparator);
         for (String dirPath : pathDirs) {
             File file = new File(dirPath, command);
+            
+            // Debug: imprimir información de búsqueda
+            System.err.println("[DEBUG] Buscando: " + command);
+            System.err.println("[DEBUG] En directorio: " + dirPath);
+            System.err.println("[DEBUG] Ruta completa: " + file.getAbsolutePath());
+            System.err.println("[DEBUG] Existe: " + file.exists());
+            System.err.println("[DEBUG] Es ejecutable: " + file.canExecute());
+            
             if (file.exists() && file.canExecute()) {
                 return file;
             }
